@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta
+    name="description"
+    content="eSports Arena Manager: plataforma de torneos competitivos."
+  >
+  <title>eSports Arena Manager | Inicio</title>
+  <link rel="stylesheet" href="css/estilos.css">
+</head>
+
+<body data-pagina="inicio">
+  <!-- Encabezado compartido -->
+  <header class="encabezado">
+    <div class="contenedor barra-navegacion">
+      <a class="logo" href="index.html" aria-label="Ir al inicio de eSports Arena Manager">
+        <span aria-hidden="true">◆</span> eSports Arena
+      </a>
+
+      <nav aria-label="Navegación principal">
+        <ul class="menu">
+          <li><a href="index.html" aria-current="page">Inicio</a></li>
+          <li><a href="torneos.html">Torneos</a></li>
+          <li><a href="detalle-torneo.html">Detalle</a></li>
+          <li><a href="inscripcion.html">Inscripción</a></li>
+          <li><a href="equipos.html">Equipos</a></li>
+          <li><a href="perfil.html">Perfil</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- Presentación principal -->
+    <section class="hero">
+      <div class="contenedor hero-contenido">
+        <div>
+          <p class="etiqueta">COMPITE · ORGANIZA · ASCIENDE</p>
+          <h1>Tu próxima victoria comienza en la arena.</h1>
+
+          <p class="texto-destacado">
+            Encuentra torneos, reúne a tu equipo y demuestra quién domina la competencia.
+          </p>
+
+          <a class="boton boton-primario" href="torneos.html">
+            Explorar torneos
+          </a>
+        </div>
+
+        <img
+          class="imagen-hero"
+          src="https://statics.forbesargentina.com/2022/05/627bb6383de0d.jpeg"
+          alt="Jugadores de eSports compitiendo frente a computadores"
+        >
+      </div>
+    </section>
+    
+
+    <!-- Estas tarjetas se crean desde los datos de JavaScript -->
+    <section class="seccion contenedor" aria-labelledby="titulo-destacados">
+      <div class="encabezado-seccion">
+        <div>
+          <p class="etiqueta">TORNEOS ACTIVOS</p>
+          <h2 id="titulo-destacados">Torneos destacados</h2>
+        </div>
+
+        <a class="enlace-texto" href="torneos.html">
+          Ver todos los torneos →
+        </a>
+      </div>
+
+      <div
+        id="torneos-destacados"
+        class="rejilla-torneos"
+        aria-live="polite"
+      ></div>
+    </section>
+
+    <!-- Información sobre inscripciones -->
+    <section class="seccion seccion-oscura">
+      <div class="contenedor dos-columnas">
+        <article>
+          <p class="etiqueta">INSCRIPCIONES</p>
+          <h2>Próximos cierres</h2>
+          <p>No dejes tu inscripción para el último minuto.</p>
+
+          <ul
+            id="proximos-cierres"
+            class="lista-cierres"
+            aria-live="polite"
+          ></ul>
+        </article>
+
+        <article class="panel-reglas">
+          <h2>¿Listo para jugar?</h2>
+
+          <p>
+            Revisa los requisitos del torneo, confirma que tu equipo esté completo
+            y participa antes de la fecha de cierre.
+          </p>
+
+          <a class="boton boton-secundario" href="inscripcion.html">
+            Ir a inscripción
+          </a>
+        </article>
+      </div>
+    </section>
+
+    <!-- Video -->
+    <section class="seccion contenedor" aria-labelledby="titulo-video">
+      <div class="encabezado-seccion">
+        <div>
+          <p class="etiqueta">VIVE LA COMPETENCIA</p>
+          <h2 id="titulo-video">Momentos que hacen historia</h2>
+        </div>
+      </div>
+
+        <div class="contenedor-video">
+            <video controls preload="metadata">
+            <source src="assets/video/esports.mp4" type="video/mp4">
+                    Tu navegador no puede reproducir este video.
+            </video>
+        </div>
+    </section>
+  </main>
+
+  <!-- Pie de página -->
+  <footer class="pie-pagina">
+    <div class="contenedor pie-contenido">
+      <div>
+        <a class="logo" href="index.html">◆ eSports Arena</a>
+        <p>Plataforma para gestión de torneos competitivos.</p>
+      </div>
+
+      <div>
+        <h2>Información</h2>
+        <ul>
+          <li><a href="torneos.html">Torneos</a></li>
+          <li><a href="equipos.html">Equipos</a></li>
+          <li><a href="perfil.html">Mi perfil</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="copyright">© 2026 eSports Arena Manager · Proyecto académico</p>
+  </footer>
+
+  <!-- Archivos JavaScript en el orden correcto -->
+  <script src="js/01-utilidades.js"></script>
+  <script src="js/02-datos.js"></script>
+  <script src="js/03-clases.js"></script>
+  <script src="js/04-ui.js"></script>
+  <script src="js/05-app.js"></script>
+</body>
+</html>
