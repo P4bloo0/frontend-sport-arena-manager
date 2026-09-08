@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta
+    name="description"
+    content="Listado y filtros de torneos de eSports Arena Manager."
+  >
+  <title>eSports Arena Manager | Torneos</title>
+  <link rel="stylesheet" href="css/estilos.css">
+</head>
+
+<body data-pagina="torneos">
+  <header class="encabezado">
+    <div class="contenedor barra-navegacion">
+      <a class="logo" href="index.html" aria-label="Ir al inicio de eSports Arena Manager">
+        <span aria-hidden="true">◆</span> eSports Arena
+      </a>
+
+      <nav aria-label="Navegación principal">
+        <ul class="menu">
+          <li><a href="index.html">Inicio</a></li>
+          <li><a href="torneos.html" aria-current="page">Torneos</a></li>
+          <li><a href="detalle-torneo.html">Detalle</a></li>
+          <li><a href="inscripcion.html">Inscripción</a></li>
+          <li><a href="equipos.html">Equipos</a></li>
+          <li><a href="perfil.html">Perfil</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main class="contenedor pagina-torneos">
+    <section class="titulo-pagina" aria-labelledby="titulo-torneos">
+      <p class="etiqueta">CATÁLOGO DE COMPETENCIAS</p>
+      <h1 id="titulo-torneos">Explora los torneos</h1>
+      <p>Usa los filtros para encontrar la competencia que mejor se adapte a tu equipo.</p>
+    </section>
+
+    <section class="panel-filtros" aria-labelledby="titulo-filtros">
+      <h2 id="titulo-filtros">Buscar y filtrar</h2>
+
+      <form id="formulario-filtros" novalidate>
+        <div class="rejilla-filtros">
+          <div class="campo">
+            <label for="buscador">Buscar por nombre</label>
+            <input
+              type="search"
+              id="buscador"
+              name="buscador"
+              placeholder="Ejemplo: Copa Oro"
+              autocomplete="off"
+            >
+          </div>
+
+          <div class="campo">
+            <label for="filtro-juego">Juego</label>
+            <select id="filtro-juego" name="juego">
+              <option value="todos">Todos los juegos</option>
+            </select>
+          </div>
+
+          <div class="campo">
+            <label for="filtro-estado">Estado</label>
+            <select id="filtro-estado" name="estado">
+              <option value="todos">Todos los estados</option>
+              <option value="Abierto">Abierto</option>
+              <option value="En curso">En curso</option>
+              <option value="Finalizado">Finalizado</option>
+            </select>
+          </div>
+
+          <div class="campo">
+            <label for="fecha-inicio">Desde la fecha</label>
+            <input type="date" id="fecha-inicio" name="fechaInicio">
+            <small>Fecha mínima de cierre de inscripción.</small>
+          </div>
+
+          <div class="campo">
+            <label for="fecha-fin">Hasta la fecha</label>
+            <input type="date" id="fecha-fin" name="fechaFin">
+            <small>Fecha máxima de cierre de inscripción.</small>
+          </div>
+        </div>
+
+        <p id="error-fechas" class="mensaje-error" aria-live="assertive"></p>
+
+        <div class="acciones-filtros">
+          <button class="boton boton-primario" type="submit">Aplicar filtros</button>
+          <button class="boton boton-limpio" type="button" id="limpiar-filtros">
+            Limpiar filtros
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <section class="seccion-resultados" aria-labelledby="titulo-resultados">
+      <div class="encabezado-seccion">
+        <h2 id="titulo-resultados">Resultados disponibles</h2>
+        <p id="contador-resultados" aria-live="polite"></p>
+      </div>
+
+      <div id="lista-torneos" class="rejilla-torneos" aria-live="polite"></div>
+
+    
+      <div id="estado-vacio" class="estado-vacio" hidden>
+        <p class="icono-estado" aria-hidden="true">⌕</p>
+        <h2>No encontramos torneos</h2>
+        <p>Prueba quitando algunos filtros o usa otro nombre de búsqueda.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="pie-pagina">
+    <div class="contenedor pie-contenido">
+      <div>
+        <a class="logo" href="index.html">◆ eSports Arena</a>
+        <p>Plataforma para la gestión de torneos competitivos.</p>
+      </div>
+
+      <div>
+        <h2>Información</h2>
+        <ul>
+          <li><a href="torneos.html">Torneos</a></li>
+          <li><a href="equipos.html">Equipos</a></li>
+          <li><a href="perfil.html">Mi perfil</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="copyright">© 2026 eSports Arena Manager</p>
+  </footer>
+
+    <script src="js/utilidades.js"></script>
+    <script src="js/datos.js"></script>
+    <script src="js/clases.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
