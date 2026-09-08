@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>eSports Arena Manager | Detalle de torneo</title>
+  <meta name="description" content="Información completa de un torneo: datos generales, participantes, llave, calendario de partidas, tabla de posiciones y premios.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Manrope:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+  <a class="saltar-contenido" href="#contenido-principal">Saltar al contenido principal</a>
+
+  <header class="cabecera">
+    <div class="cabecera__marca">
+      <span class="cabecera__logo" aria-hidden="true">⬡</span>
+      <p class="cabecera__nombre">eSports Arena Manager</p>
+    </div>
+    <nav class="navegacion" aria-label="Navegación principal">
+      <ul class="navegacion__lista">
+        <li><a href="index.html" class="navegacion__enlace">Inicio</a></li>
+        <li><a href="listado.html" class="navegacion__enlace">Torneos</a></li>
+        <li><a href="detalle-torneo.html" class="navegacion__enlace navegacion__enlace--activo" aria-current="page">Detalle de torneo</a></li>
+        <li><a href="inscripcion.html" class="navegacion__enlace">Inscripción</a></li>
+        <li><a href="equipo.html" class="navegacion__enlace">Mi equipo</a></li>
+        <li><a href="perfil.html" class="navegacion__enlace">Perfil</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="contenido-principal">
+    <section aria-labelledby="titulo-detalle">
+      <h1 id="titulo-detalle">Detalle de torneo</h1>
+      <p><a href="listado.html">Volver al listado de torneos</a></p>
+
+      <div class="selector-vista">
+        <label for="selector-torneo">Ver torneo</label>
+        <select id="selector-torneo"></select>
+      </div>
+
+      <div id="contenido-torneo" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <footer class="pie-pagina">
+    <div class="pie-pagina__col">
+      <p class="pie-pagina__marca">eSports Arena Manager</p>
+      <p>Plataforma académica para la gestión de torneos competitivos.</p>
+    </div>
+    <nav class="pie-pagina__col" aria-label="Enlaces del pie de página">
+      <h2>Explorar</h2>
+      <ul>
+        <li><a href="listado.html">Torneos</a></li>
+        <li><a href="equipo.html">Equipos</a></li>
+        <li><a href="perfil.html">Perfiles</a></li>
+      </ul>
+    </nav>
+    <div class="pie-pagina__col">
+      <h2>Proyecto</h2>
+      <p>Desarrollo FullStack II — DSY1104</p>
+      <p>&copy; <span id="anio-actual"></span> eSports Arena Manager.</p>
+    </div>
+  </footer>
+
+  <script src="js/datos.js"></script>
+  <script src="js/utiles.js"></script>
+  <script src="js/dominio.js"></script>
+  <script src="js/detalle-torneo.js"></script>
+</body>
+</html>
