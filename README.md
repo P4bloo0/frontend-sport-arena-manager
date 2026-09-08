@@ -16,8 +16,8 @@ manipulación del DOM.
 
 | Integrante | Usuario GitHub | Aporte principal |
 |---|---|---|
-| Benjamín Villalón | _(completar)_ | Datos simulados, utilidades, vista Inicio (dinámica), Listado y Detalle de torneo |
-| _(completar)_ | P4bloo0 | Vista Inicio (maquetado) y hoja de estilos |
+| Benjamín Villalón | _(completar)_ | Vista Detalle de torneo, documentación e infraestructura del repositorio |
+| _(completar)_ | P4bloo0 | Vista Inicio, Listado de torneos y hoja de estilos |
 | _(completar)_ | _(completar)_ | Formularios (Inscripción, Gestión de equipo, Perfil), validación y simulación de roles |
 
 ## Requisitos previos
@@ -39,44 +39,46 @@ y abrir `http://localhost:8000`.
 
 ## Vistas (alcance de EP1)
 
-| Vista | Archivo | Descripción |
-|---|---|---|
-| Inicio | `index.html` | Torneos destacados, próximos cierres de inscripción y video embebido. |
-| Listado de torneos | `listado.html` | Exploración con filtros (juego, estado, rango de fechas) y buscador. |
-| Detalle de torneo | `detalle-torneo.html` | Datos generales, participantes, llave, calendario, tabla de posiciones y premios. |
-| Inscripción a torneo | `inscripcion.html` | Formulario principal del dominio, con validación de plazo, cupo, duplicidad y sanciones. |
-| Gestión de equipo | `equipo.html` | Creación de equipo y administración de integrantes. |
-| Perfil de jugador | `perfil.html` | Ficha competitiva: equipos, historial, estadísticas y sanciones. |
+| Vista | Archivo | Estado | Descripción |
+|---|---|---|---|
+| Inicio | `index.html` | Implementada | Torneos destacados, próximos cierres de inscripción y video. |
+| Listado de torneos | `torneos.html` | Implementada | Exploración con filtros (juego, estado, rango de fechas) y buscador. |
+| Detalle de torneo | `detalle-torneo.html` | En desarrollo | Datos generales, participantes, llave, calendario, tabla de posiciones y premios. |
+| Inscripción a torneo | `inscripcion.html` | En desarrollo | Formulario principal del dominio, con validación de plazo, cupo, duplicidad y sanciones. |
+| Gestión de equipo | `equipos.html` | En desarrollo | Creación de equipo y administración de integrantes. |
+| Perfil de jugador | `perfil.html` | En desarrollo | Ficha competitiva: equipos, historial, estadísticas y sanciones. |
 
 ## Estructura de carpetas
 
 ```
 frontend-sport-arena-manager/
 ├── index.html              Vista Inicio
-├── listado.html            Vista Listado de torneos
-├── detalle-torneo.html     Vista Detalle de torneo
-├── inscripcion.html        Vista Inscripción a torneo
-├── equipo.html             Vista Gestión de equipo
-├── perfil.html             Vista Perfil de jugador
+├── torneos.html            Vista Listado de torneos
+├── assets/
+│   └── video/esports.mp4   Video de la sección "Momentos que hacen historia"
 ├── css/
 │   └── estilos.css         Hoja de estilos externa y única (paleta "Oro competitivo")
 ├── js/
-│   ├── datos.js            Datos simulados del dominio y API de consulta
-│   ├── utiles.js           Utilidades compartidas (DOM, escape, fechas, estados)
-│   ├── main.js             Lógica de la vista Inicio
-│   ├── listado.js          Lógica de la vista Listado
-│   ├── detalle-torneo.js   Lógica de la vista Detalle
-│   ├── validacion.js       Motor de validación de formularios
-│   ├── dominio.js          Reglas de negocio
-│   ├── inscripcion.js      Lógica de la vista Inscripción
-│   ├── equipo.js           Lógica de la vista Gestión de equipo
-│   ├── perfil.js           Lógica de la vista Perfil
-│   └── sesion.js           Simulación de rol (perfil de prueba)
-├── HANDOFF.md              Modelo de datos y API de utilidades para el equipo
+│   ├── utilidades.js       Utilidades compartidas (fechas, normalización de texto)
+│   ├── datos.js            Datos simulados de torneos
+│   ├── clases.js           Clase Torneo (cálculos del torneo)
+│   ├── ui.js               Construcción de tarjetas y listas
+│   └── app.js              Arranque y lógica por página (enrutado con data-pagina)
 ├── .env.example            Plantilla de variables de entorno (API para EP3)
 ├── .gitignore
 └── README.md
 ```
+
+Las vistas Inscripción, Gestión de equipo y Perfil añadirán sus propios
+`.html` y `.js` a medida que se desarrollen.
+
+## Convención de código
+
+- Un único espacio de nombres global: `window.ARENA`. Cada archivo lo extiende.
+- El HTML de cada página lleva `<body data-pagina="...">` y `app.js` decide qué
+  lógica ejecutar según ese valor.
+- Los `<script>` se cargan al final del `<body>`, en orden de dependencia:
+  `utilidades.js` → `datos.js` → `clases.js` → `ui.js` → `app.js`.
 
 ## Paleta de color
 
