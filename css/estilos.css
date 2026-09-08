@@ -394,3 +394,137 @@ input:focus {
   }
 }
 
+.selector-vista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  max-width: 320px;
+}
+
+.detalle {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-l);
+}
+
+.detalle__cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espacio-s);
+}
+
+.datos-torneo {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: var(--espacio-s);
+  margin: 0;
+  padding: 0;
+}
+
+.datos-torneo > div {
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-borde);
+  padding: var(--espacio-s);
+}
+
+.datos-torneo dt {
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+.datos-torneo dd {
+  margin: 0.15rem 0 0;
+  font-weight: 600;
+}
+
+.tabla-scroll {
+  overflow-x: auto;
+}
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.tabla th,
+.tabla td {
+  text-align: left;
+  padding: 0.55rem 0.6rem;
+  border-bottom: 1px solid var(--color-borde);
+}
+
+.tabla thead th {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.7;
+}
+
+.tabla tbody tr:first-child td {
+  color: var(--color-primario);
+}
+
+.llave {
+  display: flex;
+  gap: var(--espacio-m);
+  overflow-x: auto;
+  padding-bottom: var(--espacio-s);
+}
+
+.llave__ronda {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-s);
+  min-width: 190px;
+}
+
+.llave__titulo {
+  font-size: 0.8rem;
+  opacity: 0.7;
+  margin: 0;
+}
+
+.llave__cruce {
+  display: grid;
+  gap: 0.2rem;
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-left: 3px solid var(--color-primario);
+  border-radius: var(--radio-borde);
+  padding: var(--espacio-s);
+  font-size: 0.9rem;
+}
+
+.insignia {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+}
+
+.insignia--abierto,
+.insignia--programada,
+.insignia--pendiente {
+  color: var(--color-acento);
+}
+
+.insignia--en-curso,
+.insignia--cancelada,
+.insignia--rechazada {
+  color: var(--color-error);
+}
+
+.insignia--finalizado,
+.insignia--finalizada,
+.insignia--aceptada {
+  color: var(--color-texto);
+  opacity: 0.65;
+}
+
