@@ -1,8 +1,7 @@
-// Esto permite que los archivos JavaScript compartan información.
 window.ARENA = window.ARENA || {};
 
 (function (ARENA) {
-  // Convierte una fecha yyyy-mm-dd en una fecha facil de leer.
+
   function fechaLegible(fechaTexto) {
     const fecha = new Date(`${fechaTexto}T12:00:00`);
 
@@ -13,7 +12,7 @@ window.ARENA = window.ARENA || {};
     }).format(fecha);
   }
 
-  // Evita diferencias entre letras mayúsculas minúsculas y tildes al buscar
+
   function normalizarTexto(texto) {
     return texto
       .toLowerCase()
