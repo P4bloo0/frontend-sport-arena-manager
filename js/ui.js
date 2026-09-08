@@ -25,7 +25,7 @@ window.ARENA = window.ARENA || {};
           <li><strong>Cierre:</strong> ${fechaLegible(torneo.cierre)}</li>
         </ul>
 
-        <a class="boton boton-secundario" href="detalle-torneo.html">
+        <a class="boton boton-secundario" href="detalle-torneo.html?id=${torneo.id}">
           Ver detalle
         </a>
       </article>

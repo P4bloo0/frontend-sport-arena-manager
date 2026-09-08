@@ -467,3 +467,141 @@ button {
   background: #000;
   object-fit: cover;
 }
+
+/* Detalle de torneo */
+.estado-aceptada,
+.estado-finalizada {
+  color: var(--color-texto);
+  background: #49576a;
+}
+
+.estado-pendiente,
+.estado-programada {
+  color: #001b18;
+  background: var(--color-acento);
+}
+
+.estado-rechazada,
+.estado-cancelada {
+  color: #2a0d08;
+  background: var(--color-error);
+}
+
+.pagina-detalle {
+  padding: 2rem 0 4rem;
+}
+
+.selector-detalle {
+  max-width: 320px;
+  margin-bottom: 2.5rem;
+}
+
+.detalle-torneo {
+  display: grid;
+  gap: 2.5rem;
+}
+
+.detalle-encabezado {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+}
+
+.detalle-encabezado h2 {
+  margin: 0;
+}
+
+.detalle-torneo h3 {
+  margin: 0 0 1rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 2px solid var(--color-primario);
+}
+
+.ficha-datos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 1rem;
+  margin: 0;
+}
+
+.ficha-datos > div {
+  padding: 1rem;
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-borde);
+}
+
+.ficha-datos dt {
+  color: var(--color-texto-suave);
+  font-size: 0.8rem;
+}
+
+.ficha-datos dd {
+  margin: 0.3rem 0 0;
+  font-weight: bold;
+}
+
+.tabla-scroll {
+  overflow-x: auto;
+}
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+.tabla th,
+.tabla td {
+  padding: 0.6rem 0.7rem;
+  text-align: left;
+  border-bottom: 1px solid var(--color-borde);
+}
+
+.tabla th {
+  color: var(--color-texto-suave);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.llave {
+  display: flex;
+  gap: 1.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+
+.llave-ronda {
+  display: grid;
+  gap: 0.8rem;
+  align-content: start;
+  min-width: 200px;
+}
+
+.llave-ronda h4 {
+  margin: 0;
+  color: var(--color-texto-suave);
+  font-size: 0.85rem;
+}
+
+.llave-cruce {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.8rem;
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-left: 3px solid var(--color-primario);
+  border-radius: var(--radio-borde);
+  font-size: 0.9rem;
+}
+
+.aviso-vacio {
+  margin: 0;
+  padding: 1.5rem;
+  color: var(--color-texto-suave);
+  background: var(--color-superficie);
+  border: 1px dashed var(--color-borde);
+  border-radius: var(--radio-borde);
+}
