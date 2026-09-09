@@ -1,16 +1,23 @@
 window.ARENA = window.ARENA || {};
 
+ARENA.juegos = [
+  { id: "lol", nombre: "League of Legends", minIntegrantes: 5 },
+  { id: "valorant", nombre: "Valorant", minIntegrantes: 5 },
+  { id: "minecraft", nombre: "Minecraft", minIntegrantes: 1 },
+  { id: "fortnite", nombre: "Fortnite", minIntegrantes: 2 }
+];
+
 ARENA.jugadores = [
-  { id: 1, nombre: "Tomas Herrera", apodo: "tomyH" },
-  { id: 2, nombre: "Valentina Rios", apodo: "valeR" },
-  { id: 3, nombre: "Ignacio Fuentes", apodo: "nachoF" },
-  { id: 4, nombre: "Camila Soto", apodo: "camsoto" },
-  { id: 5, nombre: "Diego Navarro", apodo: "dnavarro" },
-  { id: 6, nombre: "Fernanda Lagos", apodo: "ferl" },
-  { id: 7, nombre: "Matias Rojas", apodo: "matiR" },
-  { id: 8, nombre: "Antonia Vera", apodo: "toniv" },
-  { id: 9, nombre: "Sebastian Pino", apodo: "sebap" },
-  { id: 10, nombre: "Josefa Munoz", apodo: "josem" }
+  { id: 1, nombre: "Tomas Herrera", apodo: "tomyH", correo: "tomas.herrera@arena.gg", pais: "Chile" },
+  { id: 2, nombre: "Valentina Rios", apodo: "valeR", correo: "valentina.rios@arena.gg", pais: "Chile" },
+  { id: 3, nombre: "Ignacio Fuentes", apodo: "nachoF", correo: "ignacio.fuentes@arena.gg", pais: "Argentina" },
+  { id: 4, nombre: "Camila Soto", apodo: "camsoto", correo: "camila.soto@arena.gg", pais: "Peru" },
+  { id: 5, nombre: "Diego Navarro", apodo: "dnavarro", correo: "diego.navarro@arena.gg", pais: "Chile" },
+  { id: 6, nombre: "Fernanda Lagos", apodo: "ferl", correo: "fernanda.lagos@arena.gg", pais: "Colombia" },
+  { id: 7, nombre: "Matias Rojas", apodo: "matiR", correo: "matias.rojas@arena.gg", pais: "Chile" },
+  { id: 8, nombre: "Antonia Vera", apodo: "toniv", correo: "antonia.vera@arena.gg", pais: "Uruguay" },
+  { id: 9, nombre: "Sebastian Pino", apodo: "sebap", correo: "sebastian.pino@arena.gg", pais: "Chile" },
+  { id: 10, nombre: "Josefa Munoz", apodo: "josem", correo: "josefa.munoz@arena.gg", pais: "Bolivia" }
 ];
 
 ARENA.equipos = [
