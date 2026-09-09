@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Creación y gestión de equipos: nombre, juego principal, capitán e integrantes.">
+  <title>eSports Arena Manager | Equipos</title>
+  <link rel="stylesheet" href="css/estilos.css">
+</head>
+
+<body data-pagina="equipos">
+  <header class="encabezado">
+    <div class="contenedor barra-navegacion">
+      <a class="logo" href="index.html" aria-label="Ir al inicio de eSports Arena Manager">
+        <span aria-hidden="true">◆</span> eSports Arena
+      </a>
+
+      <nav aria-label="Navegación principal">
+        <ul class="menu">
+          <li><a href="index.html">Inicio</a></li>
+          <li><a href="torneos.html">Torneos</a></li>
+          <li><a href="detalle-torneo.html">Detalle</a></li>
+          <li><a href="inscripcion.html">Inscripción</a></li>
+          <li><a href="equipos.html" aria-current="page">Equipos</a></li>
+          <li><a href="perfil.html">Perfil</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main class="contenedor pagina-detalle">
+    <section class="titulo-pagina" aria-labelledby="titulo-equipos">
+      <p class="etiqueta">MI EQUIPO</p>
+      <h1 id="titulo-equipos">Gestión de equipo</h1>
+      <p>Crea un equipo y administra su plantilla. El nombre no puede repetirse y el capitán es obligatorio.</p>
+    </section>
+
+    <div class="dos-columnas">
+      <section class="panel-filtros" aria-labelledby="titulo-crear">
+        <h2 id="titulo-crear">Crear equipo</h2>
+
+        <form id="form-equipo" class="formulario" novalidate>
+          <div class="campo">
+            <label for="eq-nombre">Nombre del equipo</label>
+            <input type="text" id="eq-nombre" name="nombre" autocomplete="off" maxlength="40">
+            <small>Entre 3 y 40 caracteres, sin repetir un equipo existente.</small>
+            <span class="mensaje-error" aria-live="polite"></span>
+          </div>
+
+          <div class="campo">
+            <label for="eq-juego">Juego principal</label>
+            <select id="eq-juego" name="juego">
+              <option value="">Selecciona un juego</option>
+            </select>
+            <span class="mensaje-error" aria-live="polite"></span>
+          </div>
+
+          <div class="campo">
+            <label for="eq-capitan">Capitán</label>
+            <select id="eq-capitan" name="capitan">
+              <option value="">Selecciona un jugador</option>
+            </select>
+            <small>Se agrega automáticamente a la lista de integrantes.</small>
+            <span class="mensaje-error" aria-live="polite"></span>
+          </div>
+
+          <div class="campo">
+            <label for="eq-clave">Clave de acceso</label>
+            <input type="password" id="eq-clave" name="clave" autocomplete="new-password">
+            <small>Mínimo 8 caracteres, con al menos una letra y un número.</small>
+            <span class="mensaje-error" aria-live="polite"></span>
+          </div>
+
+          <div class="campo">
+            <label for="eq-clave2">Repetir clave</label>
+            <input type="password" id="eq-clave2" name="clave2" autocomplete="new-password">
+            <span class="mensaje-error" aria-live="polite"></span>
+          </div>
+
+          <button type="submit" class="boton boton-primario">Crear equipo</button>
+        </form>
+
+        <div id="eq-resultado" aria-live="polite"></div>
+      </section>
+
+      <section class="panel-filtros" aria-labelledby="titulo-integrantes">
+        <h2 id="titulo-integrantes">Integrantes del equipo</h2>
+
+        <form id="form-integrante" class="formulario" novalidate>
+          <div class="campo">
+            <label for="int-jugador">Jugador</label>
+            <select id="int-jugador" name="jugador">
+              <option value="">Selecciona un jugador</option>
+            </select>
+            <span class="mensaje-error" aria-live="polite"></span>
+          </div>
+
+          <div class="campo">
+            <label for="int-rol">Rol en el equipo</label>
+            <input type="text" id="int-rol" name="rol" autocomplete="off" maxlength="30" placeholder="Ej: Soporte">
+          </div>
+
+          <button type="submit" class="boton boton-secundario">Agregar integrante</button>
+        </form>
+
+        <div id="tabla-integrantes" aria-live="polite"></div>
+      </section>
+    </div>
+
+    <section class="seccion-resultados" aria-labelledby="titulo-existentes">
+      <h2 id="titulo-existentes">Equipos existentes</h2>
+      <div id="lista-equipos" class="rejilla-torneos" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <footer class="pie-pagina">
+    <div class="contenedor pie-contenido">
+      <div>
+        <a class="logo" href="index.html">◆ eSports Arena</a>
+        <p>Plataforma para la gestión de torneos competitivos.</p>
+      </div>
+
+      <div>
+        <h2>Información</h2>
+        <ul>
+          <li><a href="torneos.html">Torneos</a></li>
+          <li><a href="equipos.html">Equipos</a></li>
+          <li><a href="perfil.html">Mi perfil</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="copyright">© 2026 eSports Arena Manager · Proyecto académico</p>
+  </footer>
+
+  <script src="js/utilidades.js"></script>
+  <script src="js/sesion.js"></script>
+  <script src="js/datos-torneo.js"></script>
+  <script src="js/validacion.js"></script>
+  <script src="js/equipos.js"></script>
+</body>
+</html>
