@@ -26,7 +26,9 @@ ARENA.equipos = [
     integrantes: [
       { jugadorId: 1, rol: "Capitan" },
       { jugadorId: 2, rol: "Tirador" },
-      { jugadorId: 3, rol: "Soporte" }
+      { jugadorId: 3, rol: "Soporte" },
+      { jugadorId: 4, rol: "Jungla" },
+      { jugadorId: 6, rol: "Central" }
     ]
   },
   {
@@ -63,6 +65,16 @@ ARENA.equipos = [
     integrantes: [
       { jugadorId: 3, rol: "Capitan" },
       { jugadorId: 9, rol: "Explorador" }
+    ]
+  },
+  {
+    id: 7, nombre: "Titanes Azules", juego: "Valorant", activo: true,
+    integrantes: [
+      { jugadorId: 5, rol: "Capitan" },
+      { jugadorId: 7, rol: "Entrada" },
+      { jugadorId: 8, rol: "Francotirador" },
+      { jugadorId: 9, rol: "Apoyo" },
+      { jugadorId: 10, rol: "Ancla" }
     ]
   }
 ];
