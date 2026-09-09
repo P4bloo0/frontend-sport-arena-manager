@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Ficha competitiva de un jugador: contacto, equipos, historial de torneos, estadísticas y sanciones.">
+  <title>eSports Arena Manager | Perfil</title>
+  <link rel="stylesheet" href="css/estilos.css">
+</head>
+
+<body data-pagina="perfil">
+  <header class="encabezado">
+    <div class="contenedor barra-navegacion">
+      <a class="logo" href="index.html" aria-label="Ir al inicio de eSports Arena Manager">
+        <span aria-hidden="true">◆</span> eSports Arena
+      </a>
+
+      <nav aria-label="Navegación principal">
+        <ul class="menu">
+          <li><a href="index.html">Inicio</a></li>
+          <li><a href="torneos.html">Torneos</a></li>
+          <li><a href="detalle-torneo.html">Detalle</a></li>
+          <li><a href="inscripcion.html">Inscripción</a></li>
+          <li><a href="equipos.html">Equipos</a></li>
+          <li><a href="perfil.html" aria-current="page">Perfil</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main class="contenedor pagina-detalle">
+    <section class="titulo-pagina" aria-labelledby="titulo-perfil">
+      <p class="etiqueta">FICHA</p>
+      <h1 id="titulo-perfil">Perfil de jugador</h1>
+    </section>
+
+    <div class="campo selector-detalle">
+      <label for="selector-jugador">Ver ficha de</label>
+      <select id="selector-jugador"></select>
+    </div>
+
+    <div class="dos-columnas">
+      <section class="panel-filtros" aria-labelledby="titulo-datos">
+        <h2 id="titulo-datos">Datos</h2>
+        <div id="ficha" aria-live="polite"></div>
+      </section>
+
+      <section class="panel-filtros" aria-labelledby="titulo-editar">
+        <h2 id="titulo-editar">Editar contacto</h2>
+        <form id="form-perfil" class="formulario" novalidate>
+          <div class="campo">
+            <label for="pf-apodo">Apodo</label>
+            <input type="text" id="pf-apodo" name="apodo" autocomplete="nickname" maxlength="16">
+            <small>Obligatorio, sin espacios, de 3 a 16 caracteres.</small>
+            <span class="mensaje-error" aria-live="polite"></span>
+          </div>
+
+          <div class="campo">
+            <label for="pf-correo">Correo</label>
+            <input type="email" id="pf-correo" name="correo" autocomplete="email">
+            <span class="mensaje-error" aria-live="polite"></span>
+          </div>
+
+          <button type="submit" class="boton boton-primario">Guardar cambios</button>
+        </form>
+        <div id="pf-guardado" aria-live="polite"></div>
+      </section>
+    </div>
+
+    <section class="seccion-resultados" aria-labelledby="titulo-pf-equipos">
+      <h2 id="titulo-pf-equipos">Equipos</h2>
+      <div id="pf-equipos" aria-live="polite"></div>
+    </section>
+
+    <section class="seccion-resultados" aria-labelledby="titulo-pf-historial">
+      <h2 id="titulo-pf-historial">Historial y estadísticas</h2>
+      <div id="pf-stats" aria-live="polite"></div>
+      <div id="pf-historial" aria-live="polite"></div>
+    </section>
+
+    <section class="seccion-resultados" aria-labelledby="titulo-pf-sanciones">
+      <h2 id="titulo-pf-sanciones">Sanciones</h2>
+      <div id="pf-sanciones" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <footer class="pie-pagina">
+    <div class="contenedor pie-contenido">
+      <div>
+        <a class="logo" href="index.html">◆ eSports Arena</a>
+        <p>Plataforma para la gestión de torneos competitivos.</p>
+      </div>
+
+      <div>
+        <h2>Información</h2>
+        <ul>
+          <li><a href="torneos.html">Torneos</a></li>
+          <li><a href="equipos.html">Equipos</a></li>
+          <li><a href="perfil.html">Mi perfil</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="copyright">© 2026 eSports Arena Manager · Proyecto académico</p>
+  </footer>
+
+  <script src="js/utilidades.js"></script>
+  <script src="js/sesion.js"></script>
+  <script src="js/datos.js"></script>
+  <script src="js/datos-torneo.js"></script>
+  <script src="js/validacion.js"></script>
+  <script src="js/perfil.js"></script>
+</body>
+</html>

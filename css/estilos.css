@@ -605,3 +605,86 @@ button {
   border: 1px dashed var(--color-borde);
   border-radius: var(--radio-borde);
 }
+
+/* Selector de rol y formularios */
+.selector-rol {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+}
+
+.selector-rol label {
+  color: var(--color-texto-suave);
+  white-space: nowrap;
+}
+
+.selector-rol select {
+  padding: 0.35rem 0.5rem;
+  color: var(--color-texto);
+  background: var(--color-fondo);
+  border: 1px solid var(--color-borde);
+  border-radius: 6px;
+}
+
+.campo .mensaje-error {
+  margin: 0.1rem 0 0;
+  min-height: 1rem;
+  font-size: 0.8rem;
+}
+
+.campo .invalido {
+  border-color: var(--color-error);
+}
+
+.formulario {
+  display: grid;
+  gap: 1.1rem;
+}
+
+fieldset.campo {
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+
+fieldset.campo legend {
+  padding: 0;
+  font-size: 0.9rem;
+  font-weight: bold;
+}
+
+.opciones-linea {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.opciones-linea label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: normal;
+}
+
+.aviso {
+  padding: 0.9rem 1rem;
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-left: 4px solid var(--color-primario);
+  border-radius: var(--radio-borde);
+}
+
+.aviso-error {
+  border-left-color: var(--color-error);
+}
+
+.aviso-ok {
+  border-left-color: var(--color-acento);
+}
+
+.lista-bloqueos {
+  margin: 0.5rem 0 0 1.2rem;
+  color: var(--color-error);
+  font-size: 0.9rem;
+}

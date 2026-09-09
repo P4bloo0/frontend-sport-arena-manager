@@ -1,16 +1,23 @@
 window.ARENA = window.ARENA || {};
 
+ARENA.juegos = [
+  { id: "lol", nombre: "League of Legends", minIntegrantes: 5 },
+  { id: "valorant", nombre: "Valorant", minIntegrantes: 5 },
+  { id: "minecraft", nombre: "Minecraft", minIntegrantes: 1 },
+  { id: "fortnite", nombre: "Fortnite", minIntegrantes: 2 }
+];
+
 ARENA.jugadores = [
-  { id: 1, nombre: "Tomas Herrera", apodo: "tomyH" },
-  { id: 2, nombre: "Valentina Rios", apodo: "valeR" },
-  { id: 3, nombre: "Ignacio Fuentes", apodo: "nachoF" },
-  { id: 4, nombre: "Camila Soto", apodo: "camsoto" },
-  { id: 5, nombre: "Diego Navarro", apodo: "dnavarro" },
-  { id: 6, nombre: "Fernanda Lagos", apodo: "ferl" },
-  { id: 7, nombre: "Matias Rojas", apodo: "matiR" },
-  { id: 8, nombre: "Antonia Vera", apodo: "toniv" },
-  { id: 9, nombre: "Sebastian Pino", apodo: "sebap" },
-  { id: 10, nombre: "Josefa Munoz", apodo: "josem" }
+  { id: 1, nombre: "Tomas Herrera", apodo: "tomyH", correo: "tomas.herrera@arena.gg", pais: "Chile" },
+  { id: 2, nombre: "Valentina Rios", apodo: "valeR", correo: "valentina.rios@arena.gg", pais: "Chile" },
+  { id: 3, nombre: "Ignacio Fuentes", apodo: "nachoF", correo: "ignacio.fuentes@arena.gg", pais: "Argentina" },
+  { id: 4, nombre: "Camila Soto", apodo: "camsoto", correo: "camila.soto@arena.gg", pais: "Peru" },
+  { id: 5, nombre: "Diego Navarro", apodo: "dnavarro", correo: "diego.navarro@arena.gg", pais: "Chile" },
+  { id: 6, nombre: "Fernanda Lagos", apodo: "ferl", correo: "fernanda.lagos@arena.gg", pais: "Colombia" },
+  { id: 7, nombre: "Matias Rojas", apodo: "matiR", correo: "matias.rojas@arena.gg", pais: "Chile" },
+  { id: 8, nombre: "Antonia Vera", apodo: "toniv", correo: "antonia.vera@arena.gg", pais: "Uruguay" },
+  { id: 9, nombre: "Sebastian Pino", apodo: "sebap", correo: "sebastian.pino@arena.gg", pais: "Chile" },
+  { id: 10, nombre: "Josefa Munoz", apodo: "josem", correo: "josefa.munoz@arena.gg", pais: "Bolivia" }
 ];
 
 ARENA.equipos = [
@@ -19,7 +26,9 @@ ARENA.equipos = [
     integrantes: [
       { jugadorId: 1, rol: "Capitan" },
       { jugadorId: 2, rol: "Tirador" },
-      { jugadorId: 3, rol: "Soporte" }
+      { jugadorId: 3, rol: "Soporte" },
+      { jugadorId: 4, rol: "Jungla" },
+      { jugadorId: 6, rol: "Central" }
     ]
   },
   {
@@ -56,6 +65,16 @@ ARENA.equipos = [
     integrantes: [
       { jugadorId: 3, rol: "Capitan" },
       { jugadorId: 9, rol: "Explorador" }
+    ]
+  },
+  {
+    id: 7, nombre: "Titanes Azules", juego: "Valorant", activo: true,
+    integrantes: [
+      { jugadorId: 5, rol: "Capitan" },
+      { jugadorId: 7, rol: "Entrada" },
+      { jugadorId: 8, rol: "Francotirador" },
+      { jugadorId: 9, rol: "Apoyo" },
+      { jugadorId: 10, rol: "Ancla" }
     ]
   }
 ];
