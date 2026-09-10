@@ -63,7 +63,8 @@ window.ARENA = window.ARENA || {};
   function calcularBloqueos() {
     const torneo = torneoPorId(form().elements.torneo.value);
     const bloqueos = [];
-    if (!torneo) return bloqueos;
+    if (!torneo) return bloqueos;{
+    }
 
     if (torneo.estado !== "Abierto") {
       bloqueos.push(`El torneo no admite inscripciones (estado: ${torneo.estado}).`);
@@ -71,7 +72,9 @@ window.ARENA = window.ARENA || {};
     if (hoy() > torneo.cierre) {
       bloqueos.push(`El plazo de inscripción cerró el ${fechaLegible(torneo.cierre)}.`);
     }
-    if (torneo.ocupados >= torneo.cupoMaximo) {
+    const ocupados = inscripcionesVigentes(torneo.id).length;
+
+    if (ocupados >= torneo.cupoMaximo) {
       bloqueos.push(`El torneo llegó a su cupo máximo (${torneo.cupoMaximo}).`);
     }
 

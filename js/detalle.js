@@ -128,36 +128,58 @@ window.ARENA = window.ARENA || {};
   }
 
   function bloqueLlave(torneoId) {
-    const partidas = (ARENA.partidas || []).filter((partida) => partida.torneoId === torneoId);
+    const partidas = (ARENA.partidas || []).filter(
+      (partida) => partida.torneoId === torneoId
+    );
     if (!partidas.length) {
-      return `<p class="aviso-vacio">La llave todavia no esta definida.</p>`;
+      return '<p class="aviso-vacio">La llave todavía no está definida.</p>';
     }
     const rondas = [];
     partidas.forEach((partida) => {
-      let grupo = rondas.find((ronda) => ronda.nombre === partida.ronda);
-      if (!grupo) {
-        grupo = { nombre: partida.ronda, partidas: [] };
-        rondas.push(grupo);
+      let ronda = rondas.find((item) => item.nombre === partida.ronda);
+      if (!ronda) {
+        ronda = { nombre: partida.ronda, partidas: [] };
+        rondas.push(ronda);
       }
-      grupo.partidas.push(partida);
+      ronda.partidas.push(partida);
     });
     const columnas = rondas
-      .map(
-        (grupo) => `
-      <div class="llave-ronda">
-        <h4>${escaparHTML(grupo.nombre)}</h4>
-        ${grupo.partidas
-          .map(
-            (partida) => `
-          <div class="llave-cruce">
-            <span>${escaparHTML(nombreParticipante(partida.localId))}</span>
-            <span>${escaparHTML(nombreParticipante(partida.visitanteId))}</span>
-          </div>`
-          )
-          .join("")}
-      </div>`
-      )
+      .map((ronda) => {
+        const cruces = ronda.partidas
+          .map((partida) => {
+            const resultado = (ARENA.resultados || []).find(
+              (item) => item.partidaId === partida.id && item.validado
+            );
+
+            const marcador = resultado
+              ? `${resultado.puntajeLocal} - ${resultado.puntajeVisitante}`
+              : "Pendiente";
+
+            const siguiente = partida.siguientePartidaId
+              ? `El ganador avanza a la partida ${partida.siguientePartidaId}.`
+              : "Esta es la última partida de la llave.";
+
+            return `
+              <article class="llave-cruce">
+                <span>${escaparHTML(nombreParticipante(partida.localId))}</span>
+                <span>${escaparHTML(nombreParticipante(partida.visitanteId))}</span>
+                <strong>${marcador}</strong>
+                <small>${escaparHTML(partida.estado)}</small>
+                <small>${siguiente}</small>
+              </article>
+            `;
+          })
+          .join("");
+
+        return `
+          <section class="llave-ronda">
+            <h4>${escaparHTML(ronda.nombre)}</h4>
+            ${cruces}
+          </section>
+        `;
+      })
       .join("");
+
     return `<div class="llave">${columnas}</div>`;
   }
 
@@ -255,7 +277,14 @@ window.ARENA = window.ARENA || {};
         <section><h3>Llave</h3>${bloqueLlave(torneoId)}</section>
         <section><h3>Calendario de partidas</h3>${bloqueCalendario(torneoId)}</section>
         <section><h3>Tabla de posiciones</h3>${bloquePosiciones(torneoId)}</section>
-        <section><h3>Premios</h3>${bloquePremios(torneoId)}</section>
+        <section>
+          <h3>Premios</h3>
+          ${
+            torneo.estado === "Finalizado"
+              ? bloquePremios(torneoId)
+              : '<p class="aviso-vacio">Los premios se publicarán al finalizar el torneo.</p>'
+          }
+        </section>
       </article>`;
   }
 
