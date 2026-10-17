@@ -1,4 +1,6 @@
 // el selector cambia la dirección y react muestra el torneo elegido
+import { useState } from "react";
+import ListaPartidas from "../components/ListaPartidas.jsx";
 import { Link, useSearchParams } from "react-router-dom";
 import { Estado } from "../components/TarjetaTorneo.jsx";
 import { Ficha, LlaveTorneo, TablaRanking } from "../components/Tablas.jsx";
@@ -107,53 +109,7 @@ export default function TorneoDetalle({ db }) {
               </div>
             )}
           </section>
-          <section>
-            <h3>Llave del torneo</h3>
-            <LlaveTorneo partidas={partidas} db={db} />
-          </section>
-          <section>
-            <h3>Calendario de partidas</h3>
-            {!partidas.length ? (
-              <p className="aviso-vacio">No hay partidas programadas.</p>
-            ) : (
-              <div className="tabla-scroll">
-                <table className="tabla">
-                  <thead>
-                    <tr>
-                      <th>Ronda</th>
-                      <th>Enfrentamiento</th>
-                      <th>Fecha y hora</th>
-                      <th>Estado</th>
-                      <th>Resultado</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {partidas.map((p) => {
-                      const r = db.resultados.find(
-                        (r) => r.partidaId === p.id && r.validado,
-                      );
-                      return (
-                        <tr key={p.id}>
-                          <td>{p.ronda}</td>
-                          <td>
-                            {nombreParticipante(db, p.localId)} vs{" "}
-                            {nombreParticipante(db, p.visitanteId)}
-                          </td>
-                          <td>{p.fechaHora}</td>
-                          <td>{p.estado}</td>
-                          <td>
-                            {r
-                              ? `${r.puntajeLocal} - ${r.puntajeVisitante}`
-                              : "Por definir"}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </section>
+          <DetallePartidas key={id} partidas={partidas} db={db} />
           <section>
             <h3>Tabla de posiciones</h3>
             <TablaRanking filas={rankingTorneo(db, id)} />
@@ -179,5 +135,35 @@ export default function TorneoDetalle({ db }) {
         </div>
       )}
     </main>
+  );
+}
+
+// La clave del torneo reinicia la ronda al cambiar de torneo.
+function DetallePartidas({ partidas, db }) {
+  const [ronda, setRonda] = useState("");
+  const rondas = [...new Set(partidas.map((p) => p.ronda))];
+  const visibles = ronda ? partidas.filter((p) => p.ronda === ronda) : partidas;
+  return (
+    <>
+      {!!partidas.length && (
+        <div className="campo selector-detalle">
+          <label htmlFor="selector-ronda">Ronda visible</label>
+          <select id="selector-ronda" value={ronda}
+            onChange={(e) => setRonda(e.target.value)}
+            aria-controls="llave-visible calendario-visible">
+            <option value="">Todas las rondas</option>
+            {rondas.map((nombre) => <option key={nombre} value={nombre}>{nombre}</option>)}
+          </select>
+        </div>
+      )}
+      <section id="llave-visible" aria-labelledby="titulo-llave">
+        <h3 id="titulo-llave">Llave del torneo</h3>
+        <LlaveTorneo partidas={visibles} db={db} />
+      </section>
+      <section id="calendario-visible" aria-labelledby="titulo-calendario" aria-live="polite">
+        <h3 id="titulo-calendario">Calendario de partidas</h3>
+        <ListaPartidas partidas={visibles} db={db} />
+      </section>
+    </>
   );
 }
