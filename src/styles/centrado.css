@@ -1,0 +1,237 @@
+/* centramos los bloques sin cambiar tu letra ni tus colores */
+.barra-navegacion {
+  justify-content: center;
+  gap: 0.6rem 1.4rem;
+  padding-block: 0.65rem;
+}
+.menu,
+.selector-rol {
+  justify-content: center;
+}
+.menu {
+  padding-block: 0.35rem;
+}
+.selector-rol select {
+  text-align: center;
+}
+
+/* la portada queda equilibrada entre el texto y la foto */
+.hero {
+  padding-block: clamp(2.5rem, 6vw, 4.5rem);
+}
+.hero-contenido {
+  gap: 2.5rem;
+  text-align: center;
+}
+.hero h1 {
+  font-size: clamp(2.2rem, 4.8vw, 3.8rem);
+  margin-inline: auto;
+}
+.hero .texto-destacado {
+  margin: 0 auto 1.5rem;
+  max-width: 48ch;
+}
+.imagen-hero {
+  width: 100%;
+  min-height: 0;
+  max-height: 400px;
+  aspect-ratio: 16 / 10;
+  margin-inline: auto;
+}
+
+/* todos los títulos y secciones comparten los mismos espacios */
+.seccion {
+  padding-block: clamp(2.5rem, 6vw, 4rem);
+}
+.titulo-pagina {
+  max-width: 900px;
+  margin-inline: auto;
+  text-align: center;
+}
+.titulo-pagina h1,
+.titulo-pagina > p {
+  margin-inline: auto;
+}
+.encabezado-seccion {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+.encabezado-seccion > p {
+  margin: 0;
+}
+.selector-detalle {
+  max-width: 420px;
+  margin-inline: auto;
+  text-align: center;
+}
+.selector-detalle select {
+  text-align: center;
+}
+.panel-filtros h2,
+.seccion-resultados > h2,
+.detalle-torneo h3 {
+  text-align: center;
+}
+.pagina-detalle {
+  max-width: 1040px;
+}
+.panel-filtros {
+  padding: clamp(1.2rem, 3vw, 1.75rem);
+}
+.ficha-datos > div {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 88px;
+  text-align: center;
+}
+.formulario > .boton {
+  width: 100%;
+  text-align: center;
+}
+
+/* la última fila de tarjetas también queda al medio */
+.rejilla-torneos {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: stretch;
+  gap: 1.25rem;
+}
+.rejilla-torneos > .tarjeta-torneo {
+  flex: 0 1 calc((100% - 2.5rem) / 3);
+  min-width: 0;
+  padding: 1.5rem;
+  text-align: center;
+}
+.tarjeta-torneo > .estado {
+  margin-inline: auto;
+}
+.tarjeta-torneo > .boton {
+  width: 100%;
+  text-align: center;
+}
+.tarjeta-torneo .datos-torneo {
+  text-align: center;
+}
+.tarjeta-torneo .acciones-filtros {
+  width: 100%;
+}
+.tarjeta-torneo .acciones-filtros > .boton {
+  min-width: 0;
+}
+
+/* los dos bloques del inicio se ven como parte del mismo conjunto */
+.seccion-oscura .dos-columnas {
+  align-items: stretch;
+}
+.seccion-oscura .dos-columnas > article {
+  padding: clamp(1.4rem, 3vw, 2rem);
+  text-align: center;
+  background: var(--color-fondo);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-borde);
+}
+.seccion-oscura .lista-cierres li {
+  background: var(--color-superficie);
+}
+.seccion-oscura .panel-reglas {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* el video va al centro y se ve completo, sin cortar la imagen */
+.contenedor-video {
+  width: 100%;
+  max-width: 900px;
+  aspect-ratio: 16 / 9;
+  margin-inline: auto;
+  background: var(--color-fondo);
+  box-shadow: var(--sombra);
+}
+.contenedor-video video {
+  object-fit: contain;
+}
+
+/* el pie sigue el mismo centro que el resto de la página */
+.pie-contenido {
+  justify-content: center;
+  align-items: center;
+  gap: 2.5rem;
+  text-align: center;
+}
+.acciones-demo {
+  justify-content: center;
+}
+.acciones-demo [role="status"] {
+  flex-basis: 100%;
+  text-align: center;
+}
+
+/* en pantallas chicas dejamos espacio a los lados y una tarjeta por fila */
+@media (max-width: 850px) {
+  .rejilla-torneos > .tarjeta-torneo {
+    flex-basis: calc((100% - 1.25rem) / 2);
+  }
+  .imagen-hero {
+    max-width: 640px;
+  }
+}
+@media (max-width: 600px) {
+  .barra-navegacion,
+  .pie-contenido {
+    align-items: center;
+  }
+  .barra-navegacion nav {
+    width: 100%;
+  }
+  .selector-rol {
+    width: 100%;
+  }
+  .hero-contenido {
+    gap: 1.75rem;
+  }
+  .rejilla-torneos > .tarjeta-torneo {
+    flex-basis: 100%;
+    max-width: 520px;
+  }
+  .imagen-hero {
+    max-height: none;
+  }
+}
+
+/* dejamos la imagen dentro de la tarjeta */
+.tarjeta-torneo {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+/* ponemos el fondo debajo de las letras */
+.tarjeta-torneo::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+
+  background-image: var(--logo-juego, none);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+
+  opacity: 0.3;
+  filter: blur(2px);
+  pointer-events: none;
+}
+
+/* las letras y botones quedan encima */
+.tarjeta-torneo > * {
+  position: relative;
+  z-index: 1;
+}

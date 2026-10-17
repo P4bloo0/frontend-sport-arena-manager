@@ -1,0 +1,104 @@
+/* dejamos tu diseño y ajustamos solo las partes que se pueden salir de la pantalla */
+.barra-navegacion {
+  flex-wrap: wrap;
+}
+.selector-rol {
+  max-width: 100%;
+}
+.selector-rol select {
+  min-width: 0;
+  max-width: 220px;
+}
+.acciones-demo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  padding-bottom: 1rem;
+  font-size: 0.85rem;
+}
+.acciones-demo .boton {
+  font-weight: normal;
+  padding: 0.4rem 0.6rem;
+}
+.boton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.campo input[type="checkbox"],
+.campo input[type="radio"] {
+  width: auto;
+}
+.dos-columnas > *,
+.hero-contenido > * {
+  min-width: 0;
+}
+.acciones-filtros {
+  flex-wrap: wrap;
+}
+.tabla-scroll {
+  max-width: 100%;
+}
+/* las tablas y la llave se mueven por dentro, sin estirar toda la página */
+.detalle-torneo,
+.detalle-torneo > * {
+  min-width: 0;
+}
+.llave {
+  max-width: 100%;
+}
+/* bootstrap acomoda estos dos paneles, con los mismos espacios de tu diseño */
+.fila-bootstrap {
+  --bs-gutter-x: 0;
+  margin: 0;
+  gap: 2rem;
+  align-items: stretch;
+  padding: 0.5rem 0;
+}
+/* los dos paneles quedan parejitos aunque uno tenga menos texto */
+.fila-bootstrap > .col-12 {
+  display: flex;
+}
+.fila-bootstrap > .col-12 > .panel-filtros {
+  width: 100%;
+}
+.panel-filtros h2 {
+  margin: 0.2rem 0 1rem;
+}
+/* las tarjetas dejan sus botones a la misma altura */
+.tarjeta-torneo > .boton,
+.tarjeta-torneo > .acciones-filtros {
+  margin-top: auto;
+}
+.tarjeta-torneo h3 {
+  min-height: 3em;
+}
+.acciones-filtros > .boton {
+  flex: 1;
+  text-align: center;
+}
+.formulario > .boton,
+.acciones-filtros > .boton {
+  min-height: 44px;
+}
+@media (min-width: 851px) {
+  .fila-bootstrap > .col-lg-6 {
+    width: calc(50% - 1rem);
+  }
+}
+@media (max-width: 850px) {
+  .fila-bootstrap > .col-lg-6 {
+    width: 100%;
+  }
+}
+@media (max-width: 600px) {
+  .selector-rol {
+    flex-wrap: wrap;
+  }
+  .selector-rol select {
+    max-width: 100%;
+  }
+  .ficha-datos {
+    grid-template-columns: 1fr;
+  }
+}
