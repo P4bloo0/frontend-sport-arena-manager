@@ -3,11 +3,11 @@ import { nombreParticipante, formatearFecha } from "../utils/logica.js";
 export function TablaRanking({ filas }) {
   if (!filas.length)
     return (
-      <p className="aviso-vacio">Todavía no hay posiciones disponibles.</p>
+      <p className="alert alert-info aviso-vacio">Todavía no hay posiciones disponibles.</p>
     );
   return (
-    <div className="tabla-scroll">
-      <table className="tabla">
+    <div className="table-responsive tabla-scroll">
+      <table className="table table-hover tabla">
         <thead>
           <tr>
             {["Pos.", "Equipo", "PJ", "PG", "PP", "Dif.", "Puntos"].map((t) => (
@@ -34,7 +34,7 @@ export function TablaRanking({ filas }) {
 }
 export function LlaveTorneo({ partidas, db }) {
   if (!partidas.length)
-    return <p className="aviso-vacio">La llave todavía no está definida.</p>;
+    return <p className="alert alert-info aviso-vacio">La llave todavía no está definida.</p>;
   const rondas = [...new Set(partidas.map((p) => p.ronda))];
   return (
     <div className="llave">

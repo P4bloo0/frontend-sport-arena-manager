@@ -50,7 +50,7 @@ export default function FormularioInscripcion({
       noValidate
     >
       <Campo id="ins-torneo" etiqueta="Torneo" error={campoError("torneoId")}>
-        <select
+        <select className="form-select"
           id="ins-torneo"
           name="torneoId"
           value={datos.torneoId}
@@ -80,7 +80,7 @@ export default function FormularioInscripcion({
             ["jugador", "Jugador individual"],
           ].map(([tipo, texto]) => (
             <label key={tipo}>
-              <input
+              <input className="form-check-input"
                 type="radio"
                 name="tipo"
                 value={tipo}
@@ -100,7 +100,7 @@ export default function FormularioInscripcion({
         ayuda="Debe coincidir con el juego y la modalidad del torneo."
         error={campoError("participanteId")}
       >
-        <select
+        <select className="form-select"
           id="ins-participante"
           name="participanteId"
           value={datos.participanteId}
@@ -122,7 +122,7 @@ export default function FormularioInscripcion({
         ayuda="Preferencia de posición en la llave. Entre 1 y 16."
         error={campoError("seed")}
       >
-        <input
+        <input className="form-control"
           id="ins-seed"
           name="seed"
           type="number"
@@ -139,7 +139,7 @@ export default function FormularioInscripcion({
         etiqueta="Correo de contacto"
         error={campoError("correo")}
       >
-        <input
+        <input className="form-control"
           id="ins-correo"
           name="correo"
           type="email"
@@ -152,7 +152,7 @@ export default function FormularioInscripcion({
       </Campo>
       <div className="campo">
         <label>
-          <input
+          <input className="form-check-input"
             type="checkbox"
             name="acepta"
             checked={datos.acepta}
@@ -176,7 +176,7 @@ export default function FormularioInscripcion({
       )}
       <button
         type="submit"
-        className="boton boton-primario"
+        className="btn btn-primary boton boton-primario"
         disabled={Object.keys(errores).length > 0}
       >
         Confirmar inscripción

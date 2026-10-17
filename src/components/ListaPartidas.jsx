@@ -4,11 +4,11 @@ import { nombreParticipante } from "../utils/logica.js";
 // Recibe las partidas de la ronda elegida; el detalle conserva la selección.
 export default function ListaPartidas({ partidas, db }) {
   if (!partidas.length)
-    return <p className="aviso-vacio">No hay partidas programadas.</p>;
+    return <p className="alert alert-info aviso-vacio">No hay partidas programadas.</p>;
 
   return (
-    <div className="tabla-scroll">
-      <table className="tabla">
+    <div className="table-responsive tabla-scroll">
+      <table className="table table-hover tabla">
         <caption className="visually-hidden">Calendario de las partidas visibles</caption>
         <thead>
           <tr>

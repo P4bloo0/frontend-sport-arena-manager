@@ -79,7 +79,7 @@ export default function Equipo({ db, perfil, alCambiar }) {
         </p>
       </section>
       {!puede && (
-        <p className="aviso">
+        <p className="alert alert-info aviso">
           El visitante puede consultar. Cambia el perfil de prueba para guardar.
         </p>
       )}
@@ -93,7 +93,7 @@ export default function Equipo({ db, perfil, alCambiar }) {
               ayuda="Entre 3 y 40 caracteres, sin repetir un equipo existente."
               error={errores.nombre}
             >
-              <input
+              <input className="form-control"
                 id="eq-nombre"
                 name="nombre"
                 maxLength="40"
@@ -107,7 +107,7 @@ export default function Equipo({ db, perfil, alCambiar }) {
               etiqueta="Juego principal"
               error={errores.juego}
             >
-              <select
+              <select className="form-select"
                 id="eq-juego"
                 name="juego"
                 value={datos.juego}
@@ -126,7 +126,7 @@ export default function Equipo({ db, perfil, alCambiar }) {
               ayuda="Se agrega automáticamente a la lista de integrantes."
               error={errores.capitanId}
             >
-              <select
+              <select className="form-select"
                 id="eq-capitan"
                 name="capitanId"
                 value={datos.capitanId}
@@ -151,7 +151,7 @@ export default function Equipo({ db, perfil, alCambiar }) {
               }
               error={errores.clave}
             >
-              <input
+              <input className="form-control"
                 id="eq-clave"
                 name="clave"
                 type="password"
@@ -166,7 +166,7 @@ export default function Equipo({ db, perfil, alCambiar }) {
               etiqueta="Repetir clave"
               error={errores.clave2}
             >
-              <input
+              <input className="form-control"
                 id="eq-clave2"
                 name="clave2"
                 type="password"
@@ -179,12 +179,12 @@ export default function Equipo({ db, perfil, alCambiar }) {
             <p className="mensaje-error" role="alert">
               {errores.general}
             </p>
-            <button className="boton boton-primario" disabled={!puede}>
+            <button className="btn btn-primary boton boton-primario" disabled={!puede}>
               {edicion ? "Guardar equipo" : "Crear equipo"}
             </button>
             {edicion && (
               <button
-                className="boton boton-limpio"
+                className="btn btn-outline-light boton boton-limpio"
                 type="button"
                 onClick={() => {
                   setEdicion(null);
@@ -205,7 +205,7 @@ export default function Equipo({ db, perfil, alCambiar }) {
           )}
           <form className="formulario" onSubmit={agregar} noValidate>
             <Campo id="int-jugador" etiqueta="Jugador">
-              <select
+              <select className="form-select"
                 id="int-jugador"
                 value={jugadorId}
                 onChange={(e) => setJugadorId(e.target.value)}
@@ -219,7 +219,7 @@ export default function Equipo({ db, perfil, alCambiar }) {
               </select>
             </Campo>
             <Campo id="int-rol" etiqueta="Rol en el equipo">
-              <input
+              <input className="form-control"
                 id="int-rol"
                 placeholder="Ej: Soporte"
                 maxLength="30"
@@ -228,19 +228,19 @@ export default function Equipo({ db, perfil, alCambiar }) {
               />
             </Campo>
             <button
-              className="boton boton-secundario"
+              className="btn btn-secondary boton boton-secundario"
               disabled={!puede || !equipo}
             >
               Agregar integrante
             </button>
           </form>
           {!equipo ? (
-            <p className="aviso-vacio">
+            <p className="alert alert-info aviso-vacio">
               Crea un equipo o elige uno de la lista.
             </p>
           ) : (
-            <div className="tabla-scroll">
-              <table className="tabla">
+            <div className="table-responsive tabla-scroll">
+              <table className="table table-hover tabla">
                 <thead>
                   <tr>
                     <th>Jugador</th>
@@ -257,7 +257,7 @@ export default function Equipo({ db, perfil, alCambiar }) {
                       <td>{i.rol}</td>
                       <td>
                         <button
-                          className="boton boton-limpio"
+                          className="btn btn-outline-light boton boton-limpio"
                           disabled={!puede || i.jugadorId === equipo.capitanId}
                           onClick={() => quitar(i.jugadorId)}
                           aria-label={
@@ -277,14 +277,14 @@ export default function Equipo({ db, perfil, alCambiar }) {
           )}
         </section>
       </DosColumnas>
-      <p className="aviso" role="status">
+      <p className="alert alert-info aviso" role="status">
         {mensaje || "Los cambios se guardan solo en este navegador."}
       </p>
       <section className="seccion-resultados">
         <h2>Equipos existentes</h2>
         <div className="rejilla-torneos">
           {db.equipos.map((e) => (
-            <article className="tarjeta-torneo" key={e.id}>
+            <article className="card tarjeta-torneo" key={e.id}>
               <h3>{e.nombre}</h3>
               <p>{e.juego}</p>
               <p>
@@ -296,13 +296,13 @@ export default function Equipo({ db, perfil, alCambiar }) {
               </p>
               <div className="acciones-filtros">
                 <button
-                  className="boton boton-secundario"
+                  className="btn btn-secondary boton boton-secundario"
                   onClick={() => setEquipoId(e.id)}
                 >
                   Ver integrantes
                 </button>
                 <button
-                  className="boton boton-limpio"
+                  className="btn btn-outline-light boton boton-limpio"
                   disabled={!puede}
                   onClick={() => editar(e)}
                 >

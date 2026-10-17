@@ -1,0 +1,118 @@
+/* Bootstrap utiliza la misma paleta Oro Competitivo que las vistas. */
+:root {
+  --bs-body-font-family: Arial, Helvetica, sans-serif;
+  --bs-body-color: var(--color-texto);
+  --bs-body-bg: var(--color-fondo);
+  --bs-border-color: var(--color-borde);
+  --bs-primary: var(--color-primario);
+  --bs-primary-rgb: 200, 155, 60;
+  --bs-secondary: var(--color-acento);
+  --bs-secondary-rgb: 10, 200, 185;
+  --bs-secondary-color: var(--color-texto-suave);
+  --bs-tertiary-bg: var(--color-superficie);
+  --bs-emphasis-color: var(--color-texto);
+  --bs-link-color: var(--color-acento);
+}
+
+.btn-primary {
+  --bs-btn-color: var(--color-fondo);
+  --bs-btn-bg: var(--color-primario);
+  --bs-btn-border-color: var(--color-primario);
+  --bs-btn-hover-color: var(--color-fondo);
+  --bs-btn-hover-bg: #d9af55;
+  --bs-btn-hover-border-color: #d9af55;
+  --bs-btn-active-color: var(--color-fondo);
+  --bs-btn-active-bg: #b78b30;
+  --bs-btn-active-border-color: #b78b30;
+  --bs-btn-disabled-color: var(--color-fondo);
+  --bs-btn-disabled-bg: var(--color-primario);
+  --bs-btn-disabled-border-color: var(--color-primario);
+  --bs-btn-focus-shadow-rgb: 200, 155, 60;
+}
+.btn-secondary {
+  --bs-btn-color: var(--color-fondo);
+  --bs-btn-bg: var(--color-acento);
+  --bs-btn-border-color: var(--color-acento);
+  --bs-btn-hover-color: var(--color-fondo);
+  --bs-btn-hover-bg: #40dbcf;
+  --bs-btn-hover-border-color: #40dbcf;
+  --bs-btn-active-color: var(--color-fondo);
+  --bs-btn-active-bg: #08a99c;
+  --bs-btn-active-border-color: #08a99c;
+  --bs-btn-disabled-color: var(--color-fondo);
+  --bs-btn-disabled-bg: var(--color-acento);
+  --bs-btn-disabled-border-color: var(--color-acento);
+  --bs-btn-focus-shadow-rgb: 10, 200, 185;
+}
+.btn-outline-light {
+  --bs-btn-color: var(--color-texto);
+  --bs-btn-border-color: var(--color-borde);
+  --bs-btn-hover-color: var(--color-fondo);
+  --bs-btn-hover-bg: var(--color-texto);
+  --bs-btn-hover-border-color: var(--color-texto);
+  --bs-btn-active-color: var(--color-fondo);
+  --bs-btn-active-bg: var(--color-texto);
+  --bs-btn-disabled-color: var(--color-texto-suave);
+  --bs-btn-disabled-border-color: var(--color-borde);
+}
+/* Las clases del diseño no deben tapar los estados interactivos de Bootstrap. */
+.boton.btn:hover, .boton.btn:focus-visible {
+  color: var(--bs-btn-hover-color);
+  background-color: var(--bs-btn-hover-bg);
+  border-color: var(--bs-btn-hover-border-color);
+}
+.boton.btn:active {
+  color: var(--bs-btn-active-color);
+  background-color: var(--bs-btn-active-bg);
+}
+.form-control, .form-select {
+  color: var(--color-texto);
+  background-color: var(--color-fondo);
+  border-color: var(--color-borde);
+}
+.form-select {
+  --bs-form-select-bg-img: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23f0e6d2' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+}
+.campo .form-select, .selector-rol .form-select {
+  padding-right: 2.25rem;
+  background-image: var(--bs-form-select-bg-img);
+  background-repeat: no-repeat;
+  background-position: right .75rem center;
+  background-size: 16px 12px;
+}
+.form-control:focus, .form-select:focus {
+  color: var(--color-texto);
+  background-color: var(--color-fondo);
+  border-color: var(--color-acento);
+  box-shadow: 0 0 0 .2rem rgba(10, 200, 185, .2);
+}
+.form-control::placeholder { color: var(--color-texto-suave); opacity: 1; }
+.campo .form-check-input {
+  width: 1.1em;
+  height: 1.1em;
+  padding: 0;
+  flex-shrink: 0;
+}
+.campo .form-check-input:checked {
+  background-color: var(--color-primario);
+  border-color: var(--color-primario);
+}
+.card { --bs-card-bg: var(--color-superficie); --bs-card-color: var(--color-texto); }
+.table {
+  --bs-table-color: var(--color-texto);
+  --bs-table-bg: var(--color-superficie);
+  --bs-table-border-color: var(--color-borde);
+  --bs-table-hover-color: var(--color-texto);
+  --bs-table-hover-bg: #172840;
+}
+.alert-info {
+  --bs-alert-color: var(--color-texto-suave);
+  --bs-alert-bg: var(--color-superficie);
+  --bs-alert-border-color: var(--color-borde);
+}
+.alert-danger {
+  --bs-alert-color: var(--color-texto);
+  --bs-alert-bg: var(--color-superficie);
+  --bs-alert-border-color: var(--color-error);
+}
+.estado { line-height: 1.4; white-space: normal; }

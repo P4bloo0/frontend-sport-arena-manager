@@ -38,7 +38,7 @@ export default function Torneos({ db }) {
           <div className="rejilla-filtros">
             <div className="campo">
               <label htmlFor="buscador">Buscar por nombre</label>
-              <input
+              <input className="form-control"
                 id="buscador"
                 name="nombre"
                 type="search"
@@ -49,7 +49,7 @@ export default function Torneos({ db }) {
             </div>
             <div className="campo">
               <label htmlFor="filtro-juego">Juego</label>
-              <select
+              <select className="form-select"
                 id="filtro-juego"
                 name="juego"
                 value={filtros.juego}
@@ -63,7 +63,7 @@ export default function Torneos({ db }) {
             </div>
             <div className="campo">
               <label htmlFor="filtro-estado">Estado</label>
-              <select
+              <select className="form-select"
                 id="filtro-estado"
                 name="estado"
                 value={filtros.estado}
@@ -77,7 +77,7 @@ export default function Torneos({ db }) {
             </div>
             <div className="campo">
               <label htmlFor="fecha-inicio">Desde la fecha</label>
-              <input
+              <input className="form-control"
                 id="fecha-inicio"
                 name="desde"
                 type="date"
@@ -89,7 +89,7 @@ export default function Torneos({ db }) {
             </div>
             <div className="campo">
               <label htmlFor="fecha-fin">Hasta la fecha</label>
-              <input
+              <input className="form-control"
                 id="fecha-fin"
                 name="hasta"
                 type="date"
@@ -104,10 +104,10 @@ export default function Torneos({ db }) {
             {error}
           </p>
           <div className="acciones-filtros">
-            <button className="boton boton-primario">Aplicar filtros</button>
+            <button className="btn btn-primary boton boton-primario">Aplicar filtros</button>
             <button
               type="button"
-              className="boton boton-limpio"
+              className="btn btn-outline-light boton boton-limpio"
               onClick={() => setFiltros(vacios)}
             >
               Limpiar filtros

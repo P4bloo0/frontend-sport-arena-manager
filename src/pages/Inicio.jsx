@@ -18,7 +18,7 @@ export default function Inicio({ db }) {
               Encuentra torneos, reúne a tu equipo y demuestra quién domina la
               competencia.
             </p>
-            <Link className="boton boton-primario" to="/torneos.html">
+            <Link className="btn btn-primary boton boton-primario" to="/torneos.html">
               Explorar torneos
             </Link>
           </div>
@@ -76,7 +76,7 @@ export default function Inicio({ db }) {
               Revisa los requisitos del torneo, confirma que tu equipo esté
               completo y participa antes de la fecha de cierre.
             </p>
-            <Link className="boton boton-secundario" to="/inscripcion.html">
+            <Link className="btn btn-secondary boton boton-secundario" to="/inscripcion.html">
               Ir a inscripción
             </Link>
           </article>

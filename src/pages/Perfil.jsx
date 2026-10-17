@@ -37,7 +37,7 @@ function Editor({ db, jugador, perfil, alCambiar }) {
           ayuda="Obligatorio, sin espacios, de 3 a 16 caracteres."
           error={errores.apodo}
         >
-          <input
+          <input className="form-control"
             id="pf-apodo"
             maxLength="16"
             value={datos.apodo}
@@ -46,7 +46,7 @@ function Editor({ db, jugador, perfil, alCambiar }) {
           />
         </Campo>
         <Campo id="pf-correo" etiqueta="Correo" error={errores.correo}>
-          <input
+          <input className="form-control"
             id="pf-correo"
             type="email"
             value={datos.correo}
@@ -57,7 +57,7 @@ function Editor({ db, jugador, perfil, alCambiar }) {
         <p className="mensaje-error" role="alert">
           {errores.general}
         </p>
-        <button className="boton boton-primario" disabled={!puede}>
+        <button className="btn btn-primary boton boton-primario" disabled={!puede}>
           Guardar cambios
         </button>
       </form>
@@ -101,7 +101,7 @@ export default function Perfil({ db, perfil, alCambiar }) {
       </section>
       <div className="campo selector-detalle">
         <label htmlFor="selector-jugador">Ver ficha de</label>
-        <select
+        <select className="form-select"
           id="selector-jugador"
           value={jugador.id}
           onChange={(e) => setConsulta(Number(e.target.value))}
@@ -145,12 +145,12 @@ export default function Perfil({ db, perfil, alCambiar }) {
       <section className="seccion-resultados">
         <h2>Equipos</h2>
         {!equipos.length ? (
-          <p className="aviso-vacio">
+          <p className="alert alert-info aviso-vacio">
             Este jugador no pertenece a ningún equipo.
           </p>
         ) : (
-          <div className="tabla-scroll">
-            <table className="tabla">
+          <div className="table-responsive tabla-scroll">
+            <table className="table table-hover tabla">
               <thead>
                 <tr>
                   <th>Equipo</th>
@@ -186,10 +186,10 @@ export default function Perfil({ db, perfil, alCambiar }) {
           ]}
         />
         {!historial.length ? (
-          <p className="aviso-vacio">Sin inscripciones registradas.</p>
+          <p className="alert alert-info aviso-vacio">Sin inscripciones registradas.</p>
         ) : (
-          <div className="tabla-scroll">
-            <table className="tabla">
+          <div className="table-responsive tabla-scroll">
+            <table className="table table-hover tabla">
               <thead>
                 <tr>
                   <th>Torneo</th>
@@ -223,10 +223,10 @@ export default function Perfil({ db, perfil, alCambiar }) {
       <section className="seccion-resultados">
         <h2>Sanciones</h2>
         {!sanciones.length ? (
-          <p className="aviso-vacio">No tiene sanciones registradas.</p>
+          <p className="alert alert-info aviso-vacio">No tiene sanciones registradas.</p>
         ) : (
           sanciones.map((s) => (
-            <article key={s.id} className="aviso">
+            <article key={s.id} className="alert alert-info aviso">
               <strong>{s.motivo}</strong>
               <p>
                 {formatearFecha(s.inicio)} — {formatearFecha(s.fin)}

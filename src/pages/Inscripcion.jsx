@@ -38,7 +38,7 @@ export default function Inscripcion({ db, perfil, alCambiar }) {
         </p>
       </section>
       {perfil.rol === "Visitante" && (
-        <p className="aviso aviso-error">
+        <p className="alert alert-danger aviso aviso-error">
           Estás viendo esta página como Visitante. Cambia el Perfil de prueba de
           la cabecera para poder inscribirte.
         </p>
@@ -57,7 +57,7 @@ export default function Inscripcion({ db, perfil, alCambiar }) {
         <aside className="panel-filtros">
           <h2>Requisitos del torneo</h2>
           {!torneo ? (
-            <p className="aviso-vacio">
+            <p className="alert alert-info aviso-vacio">
               Selecciona un torneo para ver sus requisitos.
             </p>
           ) : (
@@ -107,7 +107,7 @@ export default function Inscripcion({ db, perfil, alCambiar }) {
             />
           </div>
           <p>
-            <Link className="boton boton-secundario" to="/torneos.html">
+            <Link className="btn btn-secondary boton boton-secundario" to="/torneos.html">
               Volver a los torneos
             </Link>
           </p>

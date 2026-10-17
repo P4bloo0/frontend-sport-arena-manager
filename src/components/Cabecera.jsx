@@ -39,7 +39,7 @@ export default function Cabecera({ perfil, onPerfilChange }) {
         </nav>
         <div className="selector-rol">
           <label htmlFor="selector-perfil">Perfil de prueba</label>
-          <select
+          <select className="form-select"
             id="selector-perfil"
             value={perfil}
             onChange={(e) => onPerfilChange(e.target.value)}

@@ -11,7 +11,7 @@ const logosJuegos = {
 export function Estado({ estado }) {
   return (
     <span
-      className={"estado estado-" + estado.toLowerCase().replaceAll(" ", "-")}
+      className={"badge estado estado-" + estado.toLowerCase().replaceAll(" ", "-")}
     >
       {estado}
     </span>
@@ -21,7 +21,7 @@ export default function TarjetaTorneo({ torneo, inscripciones }) {
   const libres = cuposDisponibles(torneo, inscripciones);
   return (
     <article
-      className="tarjeta-torneo"
+      className="card tarjeta-torneo"
       style={{
         // le pasamos al fondo la imagen de este juego
         "--logo-juego": logosJuegos[torneo.juego]
@@ -49,7 +49,7 @@ export default function TarjetaTorneo({ torneo, inscripciones }) {
         </li>
       </ul>
       <Link
-        className="boton boton-secundario"
+        className="btn btn-secondary boton boton-secundario"
         to={"/detalle-torneo.html?id=" + torneo.id}
       >
         Ver detalle

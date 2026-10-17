@@ -29,7 +29,7 @@ export default function PiePagina({ alReiniciar, alActivarFechas }) {
       </div>
       <div className="contenedor acciones-demo">
         <button
-          className="boton boton-limpio"
+          className="btn btn-outline-light boton boton-limpio"
           onClick={() => {
             alActivarFechas();
             setMensaje("Fechas de prueba activadas durante siete días.");
@@ -38,7 +38,7 @@ export default function PiePagina({ alReiniciar, alActivarFechas }) {
           Activar fechas de prueba
         </button>
         <button
-          className="boton boton-limpio"
+          className="btn btn-outline-light boton boton-limpio"
           onClick={() => {
             alReiniciar();
             setMensaje("Demostración restablecida.");

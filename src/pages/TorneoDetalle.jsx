@@ -28,7 +28,7 @@ export default function TorneoDetalle({ db }) {
       </section>
       <div className="campo selector-detalle">
         <label htmlFor="selector-torneo">Ver torneo</label>
-        <select
+        <select className="form-select"
           id="selector-torneo"
           value={torneo ? id : ""}
           onChange={(e) => setBusqueda({ id: e.target.value })}
@@ -44,7 +44,7 @@ export default function TorneoDetalle({ db }) {
         </select>
       </div>
       {!torneo ? (
-        <p className="aviso-vacio" role="alert">
+        <p className="alert alert-info aviso-vacio" role="alert">
           El torneo no existe.
         </p>
       ) : (
@@ -53,7 +53,7 @@ export default function TorneoDetalle({ db }) {
             <h2>{torneo.nombre}</h2>
             <Estado estado={torneo.estado} />
             <Link
-              className="boton boton-primario"
+              className="btn btn-primary boton boton-primario"
               to={"/inscripcion.html?id=" + id}
             >
               Inscribirme
@@ -75,12 +75,12 @@ export default function TorneoDetalle({ db }) {
           <section>
             <h3>Participantes inscritos</h3>
             {!inscritos.length ? (
-              <p className="aviso-vacio">
+              <p className="alert alert-info aviso-vacio">
                 Todavía no hay participantes inscritos.
               </p>
             ) : (
-              <div className="tabla-scroll">
-                <table className="tabla">
+              <div className="table-responsive tabla-scroll">
+                <table className="table table-hover tabla">
                   <thead>
                     <tr>
                       <th>Participante</th>
@@ -127,7 +127,7 @@ export default function TorneoDetalle({ db }) {
                   ))}
               </ul>
             ) : (
-              <p className="aviso-vacio">
+              <p className="alert alert-info aviso-vacio">
                 Los premios por posición se publican al finalizar el torneo.
               </p>
             )}
@@ -146,9 +146,9 @@ function DetallePartidas({ partidas, db }) {
   return (
     <>
       {!!partidas.length && (
-        <div className="campo selector-detalle">
+        <div className="campo selector-detalle mb-0">
           <label htmlFor="selector-ronda">Ronda visible</label>
-          <select id="selector-ronda" value={ronda}
+          <select className="form-select" id="selector-ronda" value={ronda}
             onChange={(e) => setRonda(e.target.value)}
             aria-controls="llave-visible calendario-visible">
             <option value="">Todas las rondas</option>
