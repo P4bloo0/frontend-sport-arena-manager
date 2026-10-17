@@ -1,129 +1,87 @@
 # eSports Arena Manager
 
-Proyecto frontend para la asignatura Desarrollo FullStack II.
+Proyecto frontend para Desarrollo FullStack II, correspondiente a la Evaluación Parcial 2. Permite consultar torneos de videojuegos, gestionar equipos e inscribir participantes.
 
-La idea del proyecto es tener una página donde se puedan ver torneos de videojuegos, revisar sus detalles, crear equipos e inscribirlos en competencias. Por ahora funciona con datos simulados en JavaScript, ya que corresponde a la primera entrega del proyecto.
+Está desarrollado con React y Vite. Bootstrap aporta la grilla, botones, tarjetas, tablas adaptables, controles, insignias de estado y avisos; `src/styles/bootstrap-tema.css` adapta sus variables a la paleta del proyecto. Mantiene la fuente Arial y la paleta Oro Competitivo del diseño original.
 
 ## Integrantes
 
-| Integrante | Usuario GitHub | Aporte principal |
-|---|---|---|
-| Benjamín Villalón | BillaET | Vista detalle de torneo, llave, tabla de posiciones y documentación |
-| Pablo Salas | P4bloo0 | Inicio, listado de torneos y estilos |
-| Bastián Figueroa | ... | Formularios, validaciones y perfiles de prueba |
+| Integrante | GitHub |
+|---|---|
+| Benjamín Villalón | BillaET |
+| Pablo Salas | P4bloo0 |
+| Bastián Figueroa | Por completar |
 
-## Tecnologías usadas
+## Cómo ejecutarlo
 
-- HTML5
-- CSS3
-- JavaScript
-- Datos simulados con arreglos JavaScript
+Necesitas Node.js 22.12 o superior. Abre la carpeta que contiene `package.json` en VS Code y ejecuta:
 
-No se usa framework ni backend en esta etapa.
-
-## Cómo ejecutar el proyecto
-
-Se puede abrir el archivo `index.html` directamente en el navegador.
-
-También se puede usar Live Server en Visual Studio Code.
-
-## Vistas del proyecto
-
-| Vista | Archivo | Descripción |
-|---|---|---|
-| Inicio | `index.html` | Muestra torneos destacados, próximos cierres de inscripción y un video. |
-| Torneos | `torneos.html` | Permite buscar torneos por nombre y filtrarlos por juego, estado o fecha. |
-| Detalle de torneo | `detalle-torneo.html` | Muestra datos del torneo, participantes, llave, calendario, posiciones y premios. |
-| Inscripción | `inscripcion.html` | Permite inscribir a un jugador o equipo y valida cupo, plazo, sanciones y duplicidad. |
-| Equipos | `equipos.html` | Permite crear equipos, elegir capitán y agregar integrantes. |
-| Perfil | `perfil.html` | Muestra datos del jugador, equipos, historial, estadísticas y sanciones. |
-
-## Perfiles de prueba
-
-Durante esta entrega los perfiles son simulados. Se pueden cambiar desde el selector que aparece en la parte superior de la página.
-
-- Visitante: puede revisar torneos, detalles, posiciones y llaves.
-- Jugador habilitado: puede probar una inscripción válida.
-- Jugador con equipo incompleto: permite comprobar el bloqueo por falta de integrantes.
-- Jugador sancionado: permite comprobar el mensaje de sanción vigente.
-- Organizador: representa a quien administra partidas y resultados.
-- Administrador: representa a quien configura torneos y juegos.
-
-Estos perfiles se usan para probar distintos casos sin necesidad de iniciar sesión de verdad. Más adelante, en la integración con backend, los roles se obtendrán desde un token JWT.
-
-## Función de la llave
-
-La llave representa el avance del torneo por rondas.
-
-Su función es mostrar quién juega contra quién, en qué ronda se encuentran, el horario de cada partida y el resultado cuando ya fue validado. Cuando una partida todavía no tiene rival asignado, se debe mostrar “Participante por definir”.
-
-Cuando se valide un resultado, el ganador debe avanzar a la siguiente ronda. Por eso la llave no es solo una tabla visual: sirve para ordenar los cruces y mostrar el camino hasta la final.
-
-## Validaciones implementadas
-
-En los formularios se revisa lo siguiente:
-
-- Campos obligatorios.
-- Formato de correo.
-- Contraseña de mínimo ocho caracteres, con letras y números.
-- Confirmación de contraseña.
-- Nombre de equipo sin duplicados.
-- Capitán obligatorio.
-- Jugadores sin repetir dentro de un equipo.
-- Apodo sin espacios y con largo permitido.
-- Fecha inicial no mayor que la fecha final.
-- Inscripción dentro del plazo.
-- Cupos disponibles.
-- Equipo completo según el juego.
-- Sanciones vigentes.
-- Inscripción duplicada.
-
-## Estructura de carpetas
-
-```text
-frontend-sport-arena-manager/
-├── assets/
-│   └── video/
-│       └── esports.mp4
-├── css/
-│   └── estilos.css
-├── js/
-│   ├── app.js
-│   ├── clases.js
-│   ├── datos.js
-│   ├── datos-torneo.js
-│   ├── detalle.js
-│   ├── equipos.js
-│   ├── inscripcion.js
-│   ├── perfil.js
-│   ├── sesion.js
-│   ├── ui.js
-│   ├── utilidades.js
-│   └── validacion.js
-├── detalle-torneo.html
-├── equipos.html
-├── index.html
-├── inscripcion.html
-├── perfil.html
-├── torneos.html
-└── README.md
+```bash
+npm install
+npm run dev
 ```
 
-## Paleta de colores
+Abre el localhost que indique la terminal, normalmente `http://localhost:5173`. Para detener la página, presiona Ctrl + C en la terminal.
 
-Se utilizó la paleta “Oro competitivo” definida para el caso.
+## Funciones
 
-- Fondo: `#010A13`
-- Superficie: `#0A1428`
-- Primario: `#C89B3C`
-- Acento: `#0AC8B9`
-- Texto: `#F0E6D2`
-- Error: `#E4572E`
+- Inicio con torneos destacados, próximos cierres y video.
+- Búsqueda de torneos y filtros por juego, estado y fechas.
+- Detalle con participantes, calendario, llave, posiciones y premios. El selector de ronda filtra la llave y el componente `ListaPartidas`; al cambiar de torneo se muestran todas las rondas.
+- Inscripción de jugadores o equipos con validación de modalidad, plazo, cupos, sanciones y duplicados.
+- Creación y edición de equipos, capitán e integrantes.
+- Perfil de prueba con datos del jugador e historial.
 
-Los colores están definidos como variables en `css/estilos.css`, para que sea más fácil mantener el mismo diseño en todas las vistas.
+Los juegos disponibles son League of Legends, Valorant, Minecraft y Fortnite. Los datos se guardan en el navegador mediante localStorage. No hay backend ni inicio de sesión real; el selector de perfiles permite probar distintos casos.
 
-## Estado actual
+## Probar una inscripción
 
-El proyecto corresponde a EP1. La información todavía está simulada y no se conecta a una base de datos ni a una API.
+Las fechas originales son de septiembre de 2026. Para probar el formulario después de esas fechas:
 
-En las siguientes entregas se espera migrar el proyecto a React, agregar pruebas unitarias e integrar el frontend con los microservicios mediante API REST y JWT.
+1. Pulsa **Activar fechas de prueba** en el pie de página.
+2. Selecciona **Diego Navarro · Jugador** en el menú superior.
+3. En Inscripción, elige **Arena Táctica De Peru** y **Lancer Fan Club**.
+4. Completa el correo, acepta los requisitos y confirma. El seed es opcional; si lo usas, debe ser un entero de 1 a 16.
+
+**Restablecer demostración** recupera los datos iniciales y descarta los cambios guardados en el navegador.
+
+## Organización
+
+```text
+src/components/   menú, tarjetas, formularios y tablas
+src/pages/        pantallas de la aplicación
+src/data/         datos de ejemplo
+src/services/     carga y guardado local
+src/utils/        validaciones y cálculos
+src/styles/       estilos y distribución
+public/           imágenes y video
+tests/            pruebas automáticas
+docs/             requisitos y resumen de pruebas
+```
+
+Para cambiar textos de portada, edita `src/pages/Inicio.jsx`. Los colores están en `src/styles/estilos.css` y los ajustes de centrado en `src/styles/centrado.css`.
+
+Los fondos de las tarjetas están en `public/imagenes/juegos/`: `lol.jpg`, `valorant.jpg`, `Minecraft.jpg` y `fortnite.jpg`. La relación entre imagen y juego está en `src/components/TarjetaTorneo.jsx`.
+
+Si cambias `src/data/datos.js`, pulsa **Restablecer demostración** para dejar de usar la copia anterior del navegador.
+
+## Pruebas
+
+Se utilizan Jasmine y Karma para comprobar la lógica y el comportamiento de los componentes.
+
+```bash
+npm run build       # comprueba la compilación
+npm test            # ejecuta las pruebas y genera cobertura
+npm run test:manual # alternativa si no se encuentra Chrome
+```
+
+`npm test` necesita Chrome instalado. El informe se genera en `coverage/index.html`. Los resultados registrados y los casos comprobados están en [Pruebas y cobertura](docs/COBERTURA_TESTING.md).
+
+## Documentación y referencias
+
+- [Requisitos del proyecto](docs/ERS_EP2.md).
+- [Pruebas y cobertura](docs/COBERTURA_TESTING.md).
+
+Se utilizó como referencia para la migración a React la rama `develo` de [Frontend-eSports-Arena-Manager](https://github.com/jzzzn2110/Frontend-eSports-Arena-Manager), de Lucas Borquez, Nicolás Lara y Jhon Olivares. Se adaptó la organización de componentes, el servicio simulado y algunas funciones de apoyo; se conservaron los datos y la identidad visual de este proyecto y se completaron las vistas de Equipos y Perfil.
+
+No se suben `node_modules`, `dist` ni `coverage` a GitHub. Sí se incluye `package-lock.json`. Completa el usuario GitHub pendiente antes de entregar.
