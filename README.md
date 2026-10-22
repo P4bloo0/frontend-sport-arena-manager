@@ -75,13 +75,5 @@ npm test            # ejecuta las pruebas y genera cobertura
 npm run test:manual # alternativa si no se encuentra Chrome
 ```
 
-`npm test` necesita Chrome instalado. El informe se genera en `coverage/index.html`. Los resultados registrados y los casos comprobados están en [Pruebas y cobertura](docs/COBERTURA_TESTING.md).
 
-## Documentación y referencias
 
-- [Requisitos del proyecto](docs/ERS_EP2.md).
-- [Pruebas y cobertura](docs/COBERTURA_TESTING.md).
-
-Se utilizó como referencia para la migración a React la rama `develo` de [Frontend-eSports-Arena-Manager](https://github.com/jzzzn2110/Frontend-eSports-Arena-Manager), de Lucas Borquez, Nicolás Lara y Jhon Olivares. Se adaptó la organización de componentes, el servicio simulado y algunas funciones de apoyo; se conservaron los datos y la identidad visual de este proyecto y se completaron las vistas de Equipos y Perfil.
-
-No se suben `node_modules`, `dist` ni `coverage` a GitHub. Sí se incluye `package-lock.json`. Completa el usuario GitHub pendiente antes de entregar.
