@@ -1,9 +1,39 @@
-// guardamos los filtros y mostramos solo los torneos que coinciden
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import TarjetaTorneo from "../components/TarjetaTorneo.jsx";
+import { torneosApi } from "../services/torneosApi.js";
+
 const vacios = { nombre: "", juego: "", estado: "", desde: "", hasta: "" };
-export default function Torneos({ db }) {
+const estados = ["Borrador", "Abierto", "En curso", "Finalizado"];
+
+export default function Torneos() {
   const [filtros, setFiltros] = useState(vacios);
+  const [db, setDb] = useState(null);
+  const [errorCarga, setErrorCarga] = useState("");
+
+  useEffect(() => {
+    const control = new AbortController();
+
+    torneosApi.cargarCatalogo(control.signal)
+      .then((datos) => {
+        if (!control.signal.aborted) setDb(datos);
+      })
+      .catch(() => {
+        if (!control.signal.aborted) {
+          setErrorCarga("No se pudieron cargar los torneos. Revisa que el backend esté encendido.");
+        }
+      });
+
+    return () => control.abort();
+  }, []);
+
+  if (errorCarga) {
+    return <main className="contenedor" role="alert">{errorCarga}</main>;
+  }
+
+  if (!db) {
+    return <main className="contenedor" role="status">Cargando torneos…</main>;
+  }
+
   const error =
     filtros.desde && filtros.hasta && filtros.desde > filtros.hasta
       ? "La fecha inicial no puede ser posterior a la final."
@@ -17,8 +47,8 @@ export default function Torneos({ db }) {
             .includes(filtros.nombre.trim().toLowerCase()) &&
           (!filtros.juego || t.juego === filtros.juego) &&
           (!filtros.estado || t.estado === filtros.estado) &&
-          (!filtros.desde || t.cierre >= filtros.desde) &&
-          (!filtros.hasta || t.cierre <= filtros.hasta),
+          (!filtros.desde || (t.cierre && t.cierre >= filtros.desde)) &&
+          (!filtros.hasta || (t.cierre && t.cierre <= filtros.hasta)),
       );
   const cambiar = (e) =>
     setFiltros({ ...filtros, [e.target.name]: e.target.value });
@@ -70,7 +100,7 @@ export default function Torneos({ db }) {
                 onChange={cambiar}
               >
                 <option value="">Todos los estados</option>
-                {["Abierto", "En curso", "Finalizado"].map((e) => (
+                {estados.map((e) => (
                   <option key={e}>{e}</option>
                 ))}
               </select>
@@ -125,19 +155,23 @@ export default function Torneos({ db }) {
             <TarjetaTorneo
               key={t.id}
               torneo={t}
-              inscripciones={db.inscripciones}
+              mostrarDetalle={false}
             />
           ))}
         </div>
-        {!lista.length && (
+        {!lista.length && !error && (
           <div className="estado-vacio">
             <p className="icono-estado" aria-hidden="true">
               ⌕
             </p>
-            <h2>No encontramos torneos</h2>
-            <p>
-              Prueba quitando algunos filtros o usa otro nombre de búsqueda.
-            </p>
+            {db.torneos.length ? (
+              <>
+                <h2>No encontramos torneos</h2>
+                <p>Prueba quitando algunos filtros o usa otro nombre de búsqueda.</p>
+              </>
+            ) : (
+              <h2>No hay torneos disponibles</h2>
+            )}
           </div>
         )}
       </section>

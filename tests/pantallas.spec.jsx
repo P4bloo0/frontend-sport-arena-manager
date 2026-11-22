@@ -9,6 +9,7 @@ import FormularioInscripcion from "../src/components/FormularioInscripcion.jsx";
 import Equipo from "../src/pages/Equipo.jsx";
 import Perfil from "../src/pages/Perfil.jsx";
 import { arenaService } from "../src/services/arenaService.js";
+import { torneosApi } from "../src/services/torneosApi.js";
 import { perfiles } from "../src/data/datos.js";
 import { prepararDatos } from "./logica.spec.js";
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
@@ -17,6 +18,7 @@ describe("pantallas de la evaluación", () => {
   let contenedor, raiz, db;
   beforeEach(() => {
     db = prepararDatos();
+    spyOn(torneosApi, "cargarCatalogo").and.callFake(async () => db);
     contenedor = document.createElement("div");
     document.body.appendChild(contenedor);
     raiz = createRoot(contenedor);
