@@ -1,9 +1,12 @@
 import { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import Campo from "../components/Campo.jsx";
 import { authApi } from "../services/authApi.js";
 import { correoValido } from "../utils/logica.js";
 
 export default function Acceso({ sesion, avisoSesion, iniciarSesion, cerrarSesion }) {
+  const { state } = useLocation();
+  const navegar = useNavigate();
   const [registro, setRegistro] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [errores, setErrores] = useState({});
@@ -47,6 +50,10 @@ export default function Acceso({ sesion, avisoSesion, iniciarSesion, cerrarSesio
 
       iniciarSesion(respuesta?.token);
       setRegistro(false);
+      const vuelta = state?.volver;
+      if (typeof vuelta?.pathname === "string" && /^\/[a-z-]+\.html$/i.test(vuelta.pathname)) {
+        navegar(vuelta, { replace: true });
+      }
     } catch (error) {
       setMensaje(error.message);
       setErrores(error.campos ?? {});

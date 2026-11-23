@@ -3,6 +3,8 @@ import React, { act, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 import App from "../src/App.jsx";
+import Inscripcion from "../src/pages/Inscripcion.jsx";
+import { authApi } from "../src/services/authApi.js";
 import RutaProtegida from "../src/components/RutaProtegida.jsx";
 import TarjetaTorneo from "../src/components/TarjetaTorneo.jsx";
 import { TablaRanking, LlaveTorneo } from "../src/components/Tablas.jsx";
@@ -204,7 +206,7 @@ describe("pantallas de la evaluación", () => {
     ["/index.html", "Tu próxima victoria"],
     ["/torneos.html", "Explora los torneos"],
     ["/detalle-torneo.html?id=5", "Copa Del Vacio"],
-    ["/inscripcion.html?id=2", "Inscripción a torneo"],
+    ["/inscripcion.html?id=2", "Iniciar sesión"],
     ["/equipos.html", "Iniciar sesión"],
     ["/perfil.html", "Iniciar sesión"],
   ];
@@ -318,6 +320,7 @@ describe("pantallas de la evaluación", () => {
     expect(contenedor.querySelector(".tarjeta-torneo").textContent).toContain("Copa real");
     await pulsar(".tarjeta-torneo a");
     expect(contenedor.querySelector(".detalle-encabezado h2").textContent).toBe("Copa real");
+    expect(contenedor.querySelector(".detalle-encabezado a").getAttribute("href")).toBe("/inscripcion.html?id=81");
     expect(contenedor.querySelector(".ficha-datos").textContent).toContain("1 / 8");
     expect(contenedor.querySelector(".detalle-torneo tbody").textContent).toContain("ArenaPlayer");
   });
@@ -367,22 +370,68 @@ describe("pantallas de la evaluación", () => {
     await montar(<App />, "/detalle-torneo.html?id=999");
     expect(contenedor.textContent).toContain("El torneo no existe");
   });
-  it("inscripción completa actualiza cupo, muestra seed y bloquea repetir", async () => {
-    spyOn(arenaService, "cargar").and.resolveTo(db);
-    await montar(<App />, "/inscripcion.html?id=2");
-    await elegir("#selector-perfil", "jugador-elegible");
-    await elegir("#ins-participante", "7");
-    await escribir("#ins-correo", "prueba@example.com");
-    await escribir("#ins-seed", "16");
-    await pulsar('input[type="checkbox"]');
-    await pulsar('button[type="submit"]');
+  it("inscribe solo un equipo elegible y refresca los cupos", async () => {
+    const torneo = { ...db.torneos[1], juegoId: 9, cupoMaximo: 16, cupoActual: 2 };
+    const sesion = { token: "token", userId: 17, nickname: "Capitana", roles: ["JUGADOR"] };
+    torneosApi.cargarCatalogo.and.resolveTo({ torneos: [torneo] });
+    const fetchApi = spyOn(globalThis, "fetch").and.callFake(async (url, opciones) => {
+      const ruta = new URL(url).pathname.replace("/api/v1/", "");
+      if (ruta === "inscripciones") {
+        expect(opciones.method).toBe("POST");
+        expect(opciones.headers.Authorization).toBe("Bearer token");
+        expect(JSON.parse(opciones.body)).toEqual({ torneoId: torneo.id, tipoParticipante: "EQUIPO", equipoId: 31 });
+        return { ok: true, json: async () => ({ estado: "PENDIENTE" }) };
+      }
+      if (ruta === `inscripciones/cupos/${torneo.id}`) return { ok: true, json: async () => 4 };
+      const equipos = [
+        { equipoId: 31, nombre: "Equipo elegible", juegoPrincipalId: 9, capitanId: 17, estado: true },
+        { equipoId: 32, nombre: "Otro capitán", juegoPrincipalId: 9, capitanId: 19, estado: true },
+        { equipoId: 33, nombre: "Otro juego", juegoPrincipalId: 10, capitanId: 17, estado: true },
+        { equipoId: 34, nombre: "Inactivo", juegoPrincipalId: 9, capitanId: 17, estado: false },
+      ];
+      return { ok: ruta === "equipos/mis", json: async () => equipos };
+    });
+
+    await montar(<Inscripcion sesion={sesion} />, `/inscripcion.html?id=${torneo.id}`);
+    expect([...contenedor.querySelector("#ins-participante").options].map((o) => o.value)).toEqual(["", "31"]);
+    await elegir("#ins-participante", "31");
+    await pulsar("form button");
     expect(contenedor.textContent).toContain("Inscripción registrada");
-    expect(contenedor.textContent).toContain("Seed solicitado");
-    expect(contenedor.textContent).toContain("16");
-    expect(
-      contenedor.querySelector('button[type="submit"]').disabled,
-    ).toBeTrue();
-    expect(contenedor.textContent).toContain("inscripción vigente");
+    expect(contenedor.textContent).toContain("ya está inscrito");
+    expect(contenedor.querySelector("aside .ficha-datos").textContent).toContain("Cupos disponibles12");
+    expect(contenedor.querySelector("form button").disabled).toBeTrue();
+    expect(fetchApi).toHaveBeenCalledWith(jasmine.stringMatching(/equipos\/mis$/),
+      jasmine.objectContaining({ headers: jasmine.objectContaining({ Authorization: "Bearer token" }) }));
+  });
+
+  it("regresa al torneo tras iniciar sesión y envía al jugador de la cuenta", async () => {
+    const torneo = { ...db.torneos[2], estado: "Abierto", modalidad: "Individual", cupoActual: 0 };
+    torneosApi.cargarCatalogo.and.resolveTo({ torneos: [torneo] });
+    const datos = { exp: Math.floor(Date.now() / 1000) + 120, sub: "solista",
+      userId: 17, roles: ["JUGADOR"] };
+    const jwt = `cabecera.${btoa(JSON.stringify(datos)).replace(/=+$/, "")}.firma`;
+    spyOn(authApi, "ingresar").and.resolveTo({ token: jwt });
+    const fetchApi = spyOn(globalThis, "fetch").and.callFake(async (url, opciones) => {
+      const ruta = new URL(url).pathname;
+      if (ruta.endsWith("/inscripciones")) {
+        expect(JSON.parse(opciones.body)).toEqual({
+          torneoId: torneo.id, tipoParticipante: "INDIVIDUAL", jugadorId: 17,
+        });
+        return { ok: true, json: async () => ({ estado: "PENDIENTE" }) };
+      }
+      return { ok: ruta.includes("/cupos/"), json: async () => 1 };
+    });
+
+    await montar(<App />, `/inscripcion.html?id=${torneo.id}`);
+    await escribir("#acceso-nickname", "solista");
+    await escribir("#acceso-password", "clave123");
+    await pulsar("form button[type=submit]");
+    expect(contenedor.querySelector("#ins-torneo").value).toBe(String(torneo.id));
+    expect(contenedor.querySelector("#ins-participante")).toBeNull();
+    await pulsar("form button");
+    expect(contenedor.textContent).toContain("Inscripción registrada");
+    expect(contenedor.textContent).toContain("solista");
+    expect(fetchApi.calls.count()).toBe(2);
   });
   it("crea un equipo usando la cuenta autenticada como capitán", async () => {
     const sesion = { token: "token", userId: 17, nickname: "Capitana", roles: ["JUGADOR"] };
@@ -442,19 +491,10 @@ describe("pantallas de la evaluación", () => {
     await montar(<App />, "/inventada");
     expect(contenedor.textContent).toContain("Página no encontrada");
   });
-  it("activar fechas y restablecer permiten repetir la demostración", async () => {
-    spyOn(arenaService, "cargar").and.resolveTo(db);
-    await montar(<App />, "/inscripcion.html?id=1");
-    const botones = [...contenedor.querySelectorAll("footer button")];
-    await act(async () => botones[0].click());
-    expect(contenedor.textContent).toContain("Fechas de prueba activadas");
-    await act(async () => botones[1].click());
-    expect(contenedor.textContent).toContain("Demostración restablecida");
-  });
-  it("muestra un error cuando falla la carga de datos", async () => {
-    spyOn(arenaService, "cargar").and.rejectWith(new Error("fallo simulado"));
-    await montar(<App />, "/inscripcion.html");
-    expect(contenedor.textContent).toContain("No se pudieron cargar");
+  it("retira el selector y los botones de demostración", async () => {
+    await montar(<App />);
+    expect(contenedor.querySelector("#selector-perfil")).toBeNull();
+    expect(contenedor.querySelector("footer button")).toBeNull();
   });
   it("permite al capitán agregar y quitar integrantes y limita al resto a consultar", async () => {
     const equipo = { equipoId: 31, nombre: "Equipo real", juegoPrincipalId: 9, capitanId: 17, estado: true };

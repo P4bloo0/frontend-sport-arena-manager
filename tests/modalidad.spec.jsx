@@ -1,8 +1,4 @@
 // estos casos revisan que no se mezclen equipos y jugadores individuales
-import { act } from 'react';
-import { createRoot } from 'react-dom/client';
-import { MemoryRouter } from 'react-router-dom';
-import App from '../src/App.jsx';
 import { datosOriginales, perfiles } from '../src/data/datos.js';
 import { arenaService } from '../src/services/arenaService.js';
 import { esTorneoIndividual, validarInscripcion } from '../src/utils/logica.js';
@@ -47,40 +43,5 @@ describe('modalidad de los torneos', () => {
     const torneo = db.torneos.find(t => t.id === 2);
     torneo.cierre = '2099-10-20';
     expect(validarInscripcion(db, { ...formulario, torneoId: '2', tipo: 'jugador' }, perfil).modalidad).toContain('equipo');
-  });
-});
-
-describe('formulario en un torneo individual', () => {
-  let contenedor, raiz;
-  beforeEach(() => {
-    contenedor = document.createElement('div');
-    document.body.appendChild(contenedor);
-    raiz = createRoot(contenedor);
-    spyOn(window, 'scrollTo');
-    spyOn(Storage.prototype, 'getItem').and.returnValue(null);
-    spyOn(Storage.prototype, 'setItem');
-    spyOn(arenaService, 'cargar').and.resolveTo(preparar());
-  });
-  afterEach(async () => { await act(async () => raiz.unmount()); contenedor.remove(); });
-  async function elegir(selector, valor) {
-    await act(async () => { const campo = contenedor.querySelector(selector); campo.value = valor; campo.dispatchEvent(new Event('change', { bubbles: true })); });
-  }
-  it('desactiva el envío como equipo y deja confirmar al cambiar a jugador', async () => {
-    await act(async () => raiz.render(<MemoryRouter initialEntries={['/inscripcion.html?id=3']}><App /></MemoryRouter>));
-    await elegir('#selector-perfil', 'jugador-elegible');
-    await elegir('#ins-participante', '5');
-    await act(async () => {
-      const correo = contenedor.querySelector('#ins-correo');
-      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(correo, 'prueba@example.com');
-      correo.dispatchEvent(new Event('input', { bubbles: true }));
-      contenedor.querySelector('input[type="checkbox"]').click();
-    });
-    expect(contenedor.querySelector('button[type="submit"]').disabled).toBeTrue();
-    expect(contenedor.textContent).toContain('Este torneo es individual');
-    await act(async () => contenedor.querySelector('input[value="jugador"]').click());
-    await elegir('#ins-participante', '5');
-    expect(contenedor.querySelector('button[type="submit"]').disabled).toBeFalse();
-    await act(async () => contenedor.querySelector('button[type="submit"]').click());
-    expect(contenedor.textContent).toContain('Inscripción registrada');
   });
 });

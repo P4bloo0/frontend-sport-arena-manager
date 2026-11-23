@@ -1,6 +1,4 @@
-// viene de la idea de cabecera de tu amigo, con tu mismo menú y logo
 import { Link, useLocation } from "react-router-dom";
-import { perfiles } from "../data/datos.js";
 const enlaces = [
   ["index.html", "Inicio"],
   ["torneos.html", "Torneos"],
@@ -10,7 +8,7 @@ const enlaces = [
   ["perfil.html", "Perfil"],
   ["acceso.html", "Acceso"],
 ];
-export default function Cabecera({ perfil, onPerfilChange, sesion }) {
+export default function Cabecera({ sesion }) {
   const location = useLocation();
   return (
     <header className="encabezado">
@@ -38,20 +36,6 @@ export default function Cabecera({ perfil, onPerfilChange, sesion }) {
             ))}
           </ul>
         </nav>
-        <div className="selector-rol">
-          <label htmlFor="selector-perfil">Perfil de prueba</label>
-          <select className="form-select"
-            id="selector-perfil"
-            value={perfil}
-            onChange={(e) => onPerfilChange(e.target.value)}
-          >
-            {perfiles.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.nombre} · {p.rol}
-              </option>
-            ))}
-          </select>
-        </div>
       </div>
     </header>
   );

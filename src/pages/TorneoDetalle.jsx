@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import ListaPartidas from "../components/ListaPartidas.jsx";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { Estado } from "../components/TarjetaTorneo.jsx";
 import { Ficha, LlaveTorneo, TablaRanking } from "../components/Tablas.jsx";
 import { useCatalogoTorneos } from "../hooks/useCatalogoTorneos.js";
@@ -77,6 +77,11 @@ function FichaTorneo({ torneo }) {
       <div className="detalle-encabezado">
         <h2>{torneo.nombre}</h2>
         <Estado estado={torneo.estado} />
+        {torneo.estado === "Abierto" && (
+          <Link className="btn btn-primary boton boton-primario" to={`/inscripcion.html?id=${id}`}>
+            Inscribirme
+          </Link>
+        )}
       </div>
       <Ficha
         filas={[

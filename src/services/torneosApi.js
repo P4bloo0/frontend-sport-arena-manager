@@ -96,9 +96,11 @@ export const torneosApi = {
       torneos: torneos.map((torneo) => ({
         id: torneo.torneoId,
         nombre: torneo.nombre,
+        juegoId: torneo.juegoId,
         juego: nombres.get(torneo.juegoId) ?? `Juego #${torneo.juegoId}`,
         modalidad: torneo.modalidad,
         estado: estados[torneo.estado] ?? torneo.estado,
+        fechaCierre: torneo.fechaCierreInscripcion,
         cierre: torneo.fechaCierreInscripcion?.slice(0, 10) ?? "",
         cupoMaximo: torneo.cupoMaximo,
         cupoActual: torneo.cupoActual ?? 0,

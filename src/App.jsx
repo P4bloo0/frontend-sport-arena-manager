@@ -1,8 +1,5 @@
-// tu amigo comparte el perfil desde app; aquí también compartimos los datos
-import { useEffect, useState } from "react";
-import { Navigate, Route, Routes, matchPath, useLocation } from "react-router-dom";
-import { perfiles } from "./data/datos.js";
-import { arenaService } from "./services/arenaService.js";
+import { useEffect } from "react";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import Cabecera from "./components/Cabecera.jsx";
 import PiePagina from "./components/PiePagina.jsx";
 import Inicio from "./pages/Inicio.jsx";
@@ -16,45 +13,7 @@ import Acceso from "./pages/Acceso.jsx";
 import { useSesion } from "./hooks/useSesion.js";
 export default function App() {
   const { sesion, avisoSesion, iniciarSesion, cerrarSesion } = useSesion();
-  const [db, setDb] = useState(null);
-  const [error, setError] = useState("");
-  const [perfilId, setPerfil] = useState(() => {
-    try {
-      const id = localStorage.getItem("arena_perfil_prueba");
-      return perfiles.some((p) => p.id === id) ? id : "visitante";
-    } catch {
-      return "visitante";
-    }
-  });
   const ubicacion = useLocation();
-  const requiereDemo = matchPath("/inscripcion.html", ubicacion.pathname);
-  const perfil = perfiles.find((p) => p.id === perfilId) ?? perfiles[0];
-  // al abrir cargamos la demo, al salir dejamos de esperar la respuesta
-  useEffect(() => {
-    let activo = true;
-    arenaService
-      .cargar()
-      .then((datos) => {
-        if (activo) setDb(datos);
-      })
-      .catch(() => {
-        if (activo) setError("No se pudieron cargar los datos.");
-      });
-    return () => {
-      activo = false;
-    };
-  }, []);
-  // se guarda fuera del dibujo de la pantalla
-  useEffect(() => {
-    if (db) arenaService.guardar(db);
-  }, [db]);
-  useEffect(() => {
-    try {
-      localStorage.setItem("arena_perfil_prueba", perfilId);
-    } catch {
-      /* la elección sigue funcionando mientras no cierres */
-    }
-  }, [perfilId]);
   useEffect(() => {
     const nombres = {
       "/index.html": "Inicio",
@@ -69,22 +28,9 @@ export default function App() {
       "eSports Arena Manager | " + (nombres[ubicacion.pathname] ?? "Inicio");
     window.scrollTo(0, 0);
   }, [ubicacion.pathname]);
-  if (requiereDemo && error)
-    return (
-      <main className="contenedor seccion">
-        <p role="alert">{error}</p>
-      </main>
-    );
-  if (requiereDemo && !db)
-    return (
-      <main className="contenedor seccion">
-        <p role="status">Cargando la arena…</p>
-      </main>
-    );
-  const props = { db, perfil, alCambiar: setDb };
   return (
     <>
-      <Cabecera perfil={perfilId} onPerfilChange={setPerfil} sesion={sesion} />
+      <Cabecera sesion={sesion} />
       <Routes>
         <Route path="/" element={<Navigate to="/index.html" replace />} />
         <Route path="/index.html" element={<Inicio />} />
@@ -106,7 +52,11 @@ export default function App() {
         />
         <Route
           path="/inscripcion.html"
-          element={<Inscripcion key={perfilId + ubicacion.search} {...props} />}
+          element={
+            <RutaProtegida sesion={sesion}>
+              {sesion && <Inscripcion key={sesion.userId ?? sesion.nickname} sesion={sesion} />}
+            </RutaProtegida>
+          }
         />
         <Route
           path="/equipos.html"
@@ -134,12 +84,7 @@ export default function App() {
           }
         />
       </Routes>
-      {db && (
-        <PiePagina
-          alReiniciar={() => setDb(arenaService.reiniciar())}
-          alActivarFechas={() => setDb(arenaService.activarFechas(db))}
-        />
-      )}
+      <PiePagina />
     </>
   );
 }
