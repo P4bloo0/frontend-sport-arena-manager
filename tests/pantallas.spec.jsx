@@ -3,6 +3,7 @@ import React, { act, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 import App from "../src/App.jsx";
+import RutaProtegida from "../src/components/RutaProtegida.jsx";
 import TarjetaTorneo from "../src/components/TarjetaTorneo.jsx";
 import { TablaRanking, LlaveTorneo } from "../src/components/Tablas.jsx";
 import FormularioInscripcion from "../src/components/FormularioInscripcion.jsx";
@@ -161,7 +162,7 @@ describe("pantallas de la evaluación", () => {
     ["/detalle-torneo.html?id=5", "Copa Del Vacio"],
     ["/inscripcion.html?id=2", "Inscripción a torneo"],
     ["/equipos.html", "Gestión de equipo"],
-    ["/perfil.html", "Perfil de jugador"],
+    ["/perfil.html", "Iniciar sesión"],
   ];
   for (const [ruta, texto] of rutas)
     it("abre la vista " + ruta, async () => {
@@ -170,6 +171,49 @@ describe("pantallas de la evaluación", () => {
       expect(contenedor.textContent).toContain(texto);
       expect(contenedor.querySelectorAll("main").length).toBe(1);
     });
+  it("carga la cuenta con el JWT y descarta el perfil al cerrar otra pestaña", async () => {
+    const datos = { exp: Math.floor(Date.now() / 1000) + 120, sub: "real",
+      userId: 17, roles: ["JUGADOR"] };
+    const jwt = `cabecera.${btoa(JSON.stringify(datos)).replace(/=+$/, "")}.firma`;
+    const getItem = localStorage.getItem;
+    getItem.withArgs("arena_sesion").and.returnValue(jwt);
+    spyOn(arenaService, "cargar").and.rejectWith(new Error("demo no disponible"));
+    const fetchPerfil = spyOn(globalThis, "fetch").and.resolveTo({
+      ok: true,
+      json: async () => ({
+        usuarioId: 17, nombre: "Cuenta real", email: "real@example.com",
+        nickname: "real", rol: "JUGADOR", estado: "ACTIVO",
+      }),
+    });
+
+    await montar(<App />, "/perfil.html");
+    expect(fetchPerfil).toHaveBeenCalledWith(jasmine.stringMatching(/\/api\/v1\/usuarios\/me$/),
+      jasmine.objectContaining({
+        headers: jasmine.objectContaining({ Authorization: `Bearer ${jwt}` }),
+      }));
+    expect(contenedor.textContent).toContain("real@example.com");
+
+    await act(async () => {
+      getItem.withArgs("arena_sesion").and.returnValue(null);
+      window.dispatchEvent(new StorageEvent("storage", { key: "arena_sesion" }));
+    });
+    expect(contenedor.textContent).toContain("Iniciar sesión");
+    expect(contenedor.textContent).not.toContain("real@example.com");
+  });
+
+  it("el guard bloquea un rol sin permiso y admite un rol autorizado", async () => {
+    const vista = (roles) => (
+      <RutaProtegida sesion={{ roles }} roles={["ADMINISTRADOR"]}>
+        <h1>Administración</h1>
+      </RutaProtegida>
+    );
+    await montar(vista(["ORGANIZADOR"]));
+    expect(contenedor.textContent).toContain("Acceso restringido");
+
+    await montar(vista(["ADMINISTRADOR"]));
+    expect(contenedor.textContent).toContain("Administración");
+  });
+
   it("abre Acceso aunque falle la carga de datos de prueba", async () => {
     spyOn(arenaService, "cargar").and.rejectWith(new Error("fallo simulado"));
     await montar(<App />, "/acceso.html");

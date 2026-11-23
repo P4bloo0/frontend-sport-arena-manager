@@ -1,6 +1,6 @@
 // tu amigo comparte el perfil desde app; aquí también compartimos los datos
 import { useEffect, useState } from "react";
-import { Navigate, Route, Routes, useLocation, useMatch } from "react-router-dom";
+import { Navigate, Route, Routes, matchPath, useLocation } from "react-router-dom";
 import { perfiles } from "./data/datos.js";
 import { arenaService } from "./services/arenaService.js";
 import Cabecera from "./components/Cabecera.jsx";
@@ -10,7 +10,8 @@ import Torneos from "./pages/Torneos.jsx";
 import TorneoDetalle from "./pages/TorneoDetalle.jsx";
 import Inscripcion from "./pages/Inscripcion.jsx";
 import Equipo from "./pages/Equipo.jsx";
-import Perfil from "./pages/Perfil.jsx";
+import PerfilCuenta from "./pages/PerfilCuenta.jsx";
+import RutaProtegida from "./components/RutaProtegida.jsx";
 import Acceso from "./pages/Acceso.jsx";
 import { useSesion } from "./hooks/useSesion.js";
 export default function App() {
@@ -26,7 +27,9 @@ export default function App() {
     }
   });
   const ubicacion = useLocation();
-  const esAcceso = Boolean(useMatch("/acceso.html"));
+  const requiereDemo = !["/acceso.html", "/perfil.html"].some(
+    (ruta) => matchPath(ruta, ubicacion.pathname),
+  );
   const perfil = perfiles.find((p) => p.id === perfilId) ?? perfiles[0];
   // al abrir cargamos la demo, al salir dejamos de esperar la respuesta
   useEffect(() => {
@@ -68,13 +71,13 @@ export default function App() {
       "eSports Arena Manager | " + (nombres[ubicacion.pathname] ?? "Inicio");
     window.scrollTo(0, 0);
   }, [ubicacion.pathname]);
-  if (!esAcceso && error)
+  if (requiereDemo && error)
     return (
       <main className="contenedor seccion">
         <p role="alert">{error}</p>
       </main>
     );
-  if (!esAcceso && !db)
+  if (requiereDemo && !db)
     return (
       <main className="contenedor seccion">
         <p role="status">Cargando la arena…</p>
@@ -113,7 +116,11 @@ export default function App() {
         />
         <Route
           path="/perfil.html"
-          element={<Perfil key={perfilId} {...props} />}
+          element={
+            <RutaProtegida sesion={sesion}>
+              {sesion && <PerfilCuenta key={sesion.userId ?? sesion.nickname} token={sesion.token} />}
+            </RutaProtegida>
+          }
         />
         <Route
           path="*"

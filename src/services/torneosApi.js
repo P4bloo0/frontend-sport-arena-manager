@@ -1,5 +1,4 @@
-const URL = (import.meta.env?.VITE_API_URL || "http://localhost:8080")
-  .replace(/\/+$/, "");
+import { solicitar } from "./api.js";
 
 const estados = {
   BORRADOR: "Borrador",
@@ -8,19 +7,11 @@ const estados = {
   FINALIZADO: "Finalizado",
 };
 
-async function consultar(ruta, signal) {
-  const respuesta = await fetch(`${URL}/api/v1/${ruta}`, { signal });
-  if (!respuesta.ok) {
-    throw new Error(`Error ${respuesta.status} al consultar ${ruta}.`);
-  }
-  return respuesta.json();
-}
-
 export const torneosApi = {
   async cargarCatalogo(signal) {
     const [torneos, juegos] = await Promise.all([
-      consultar("torneos", signal),
-      consultar("juegos", signal),
+      solicitar("torneos", { signal }),
+      solicitar("juegos", { signal }),
     ]);
 
     const nombres = new Map(juegos.map((juego) => [juego.juegoId, juego.nombre]));
