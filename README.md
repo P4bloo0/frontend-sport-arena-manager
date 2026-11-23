@@ -1,8 +1,6 @@
 # eSports Arena Manager
 
-Proyecto frontend de Desarrollo FullStack II. El listado de torneos y la pantalla de acceso ya consumen el backend de Arena. La integración de las demás pantallas está en curso.
-
-Está desarrollado con React y Vite. Bootstrap aporta la grilla, botones, tarjetas, tablas adaptables, controles, insignias de estado y avisos; `src/styles/bootstrap-tema.css` adapta sus variables a la paleta del proyecto. Mantiene la fuente Arial y la paleta Oro Competitivo del diseño original.
+Frontend de la Evaluación Parcial 3 de Desarrollo FullStack II. Usa React, Vite y Bootstrap. El catálogo, las cuentas y las operaciones de los paneles consumen la API REST del [backend de Arena](https://github.com/P4bloo0/esports-arena-manager).
 
 ## Integrantes
 
@@ -12,77 +10,40 @@ Está desarrollado con React y Vite. Bootstrap aporta la grilla, botones, tarjet
 | Pablo Salas | P4bloo0 |
 | Bastián Figueroa | Por completar |
 
-## Cómo ejecutarlo
+## Ejecución local
 
-Necesitas Node.js 22.12 o superior. Abre la carpeta que contiene `package.json` en VS Code y ejecuta:
+1. Levanta el backend y su base de datos siguiendo las instrucciones de su repositorio. Espera a que el Gateway responda en [la ruta de torneos](http://localhost:8080/api/v1/torneos). Un arreglo vacío también indica que la consulta funciona.
+2. En la raíz del frontend, instala las dependencias y levanta Vite. Usa Node.js 22.12 o superior.
 
-```bash
-npm install
-npm run dev
-```
+   ```bash
+   npm ci
+   npm run dev
+   ```
 
-Abre el localhost que indique la terminal, normalmente `http://localhost:5173`. Para detener la página, presiona Ctrl + C en la terminal.
+3. Abre la dirección que muestre Vite, normalmente [localhost:5173](http://localhost:5173). Para detenerlo, presiona Ctrl+C.
 
-## Probar el acceso real
+El frontend usa el Gateway en `http://localhost:8080`. Para cambiarlo, copia `.env.example` a `.env.local`, modifica `VITE_API_URL` y reinicia Vite. El valor contiene la URL base sin el prefijo `/api/v1`. Si cambia el origen del frontend, inclúyelo en `CORS_ORIGINS` del Gateway y reinícialo. Las variables `VITE_*` son públicas en el navegador.
 
-1. Enciende el backend de Arena y comprueba que el Gateway responda en `http://localhost:8080/api/v1/torneos`.
-2. Abre `http://localhost:5173/acceso.html` y pulsa **Registrarme** o entra con una cuenta existente.
-3. Recarga la página y comprueba que sigue abierta **Mi sesión**. Abre Acceso en otra pestaña, cierra sesión en la primera y comprueba que la segunda también vuelve al formulario.
+## Acceso por rol
 
-El frontend usa `http://localhost:8080` por defecto. Si tu Gateway tiene otra dirección, copia `.env.example` a `.env.local`, cambia `VITE_API_URL` y reinicia Vite. Si cambia el origen del frontend, agrégalo a `CORS_ORIGINS` del Gateway.
+| Acceso | Funciones |
+|---|---|
+| Visitante | Inicio, catálogo, detalle de torneo, login y registro público. |
+| Jugador | Perfil, creación y gestión de sus equipos cuando es capitán e inscripción según modalidad. |
+| Organizador | Panel Organización con inscripciones, sanciones, partidas y resultados. |
+| Administrador | Panel Administración con juegos, torneos y premios, además del panel Organización. |
 
-## Funciones
-
-- Inicio con torneos destacados, próximos cierres y video.
-- Búsqueda de torneos y filtros por juego, estado y fechas.
-- Detalle con participantes, calendario, llave, posiciones y premios. El selector de ronda filtra la llave y el componente `ListaPartidas`; al cambiar de torneo se muestran todas las rondas.
-- Inscripción de jugadores o equipos con validación de modalidad, plazo, cupos, sanciones y duplicados.
-- Creación y edición de equipos, capitán e integrantes.
-- Perfil de prueba con datos del jugador e historial.
-
-**Acceso** registra cuentas e inicia sesión con el backend. El navegador guarda el JWT para mantener la sesión al recargar. **Torneos** consulta el catálogo real. Inicio, Detalle, Equipos, Inscripción y Perfil todavía usan la demostración del navegador, con su selector **Perfil de prueba**.
-
-## Probar una inscripción de demostración
-
-Las fechas originales son de septiembre de 2026. Para probar el formulario después de esas fechas:
-
-1. Pulsa **Activar fechas de prueba** en el pie de página.
-2. Selecciona **Diego Navarro · Jugador** en el menú superior.
-3. En Inscripción, elige **Arena Táctica De Peru** y **Lancer Fan Club**.
-4. Completa el correo, acepta los requisitos y confirma. El seed es opcional; si lo usas, debe ser un entero de 1 a 16.
-
-**Restablecer demostración** recupera los datos iniciales y descarta los cambios guardados en el navegador.
-
-## Organización
-
-```text
-src/components/   menú, tarjetas, formularios y tablas
-src/pages/        pantallas de la aplicación
-src/data/         datos de ejemplo
-src/services/     acceso a la API y almacenamiento de la demostración
-src/hooks/        gestión de la sesión
-src/utils/        validaciones y cálculos
-src/styles/       estilos y distribución
-public/           imágenes y video
-tests/            pruebas automáticas
-docs/             requisitos y resumen de pruebas
-```
-
-Para cambiar textos de portada, edita `src/pages/Inicio.jsx`. Los colores están en `src/styles/estilos.css` y los ajustes de centrado en `src/styles/centrado.css`.
-
-Los fondos de las tarjetas están en `public/imagenes/juegos/`: `lol.jpg`, `valorant.jpg`, `Minecraft.jpg` y `fortnite.jpg`. La relación entre imagen y juego está en `src/components/TarjetaTorneo.jsx`.
-
-Si cambias `src/data/datos.js`, pulsa **Restablecer demostración** para dejar de usar la copia anterior del navegador.
+El registro público crea cuentas de jugador. Para preparar cuentas privilegiadas, consulta [la guía de integración](docs/INTEGRACION_EP3.md).
 
 ## Pruebas
 
-Se utilizan Jasmine y Karma para comprobar la lógica y el comportamiento de los componentes.
-
 ```bash
-npm run build       # comprueba la compilación
-npm test            # ejecuta las pruebas y genera cobertura
-npm run test:manual # alternativa si no se encuentra Chrome
+npm run build
+npm test
+npm run test:dom
+npm run test:manual
 ```
 
+`npm test` usa Jasmine y Karma con Chrome Headless y genera cobertura en `coverage/`. `test:dom` y `test:manual` son alternativas para cuando el navegador no está disponible o se necesita iniciar la suite manualmente. La [guía de integración](docs/INTEGRACION_EP3.md) incluye un recorrido por rol y los resultados verificados para EP3.
 
-
+Los documentos [ERS_EP2](docs/ERS_EP2.md) y [COBERTURA_TESTING](docs/COBERTURA_TESTING.md) registran la versión de demostración de EP2.
