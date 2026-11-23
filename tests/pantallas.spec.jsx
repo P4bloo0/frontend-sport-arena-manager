@@ -170,6 +170,14 @@ describe("pantallas de la evaluación", () => {
       expect(contenedor.textContent).toContain(texto);
       expect(contenedor.querySelectorAll("main").length).toBe(1);
     });
+  it("abre Acceso aunque falle la carga de datos de prueba", async () => {
+    spyOn(arenaService, "cargar").and.rejectWith(new Error("fallo simulado"));
+    await montar(<App />, "/acceso.html");
+
+    expect(contenedor.querySelector("h1")?.textContent).toBe("Iniciar sesión");
+    expect(contenedor.querySelector("#acceso-nickname")).not.toBeNull();
+    expect(document.title).toBe("eSports Arena Manager | Acceso");
+  });
   it("inicio conserva la imagen original con descripción y el video local", async () => {
     spyOn(arenaService, "cargar").and.resolveTo(db);
     await montar(<App />);

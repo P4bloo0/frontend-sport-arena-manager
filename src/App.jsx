@@ -1,6 +1,6 @@
 // tu amigo comparte el perfil desde app; aquí también compartimos los datos
 import { useEffect, useState } from "react";
-import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation, useMatch } from "react-router-dom";
 import { perfiles } from "./data/datos.js";
 import { arenaService } from "./services/arenaService.js";
 import Cabecera from "./components/Cabecera.jsx";
@@ -11,7 +11,10 @@ import TorneoDetalle from "./pages/TorneoDetalle.jsx";
 import Inscripcion from "./pages/Inscripcion.jsx";
 import Equipo from "./pages/Equipo.jsx";
 import Perfil from "./pages/Perfil.jsx";
+import Acceso from "./pages/Acceso.jsx";
+import { useSesion } from "./hooks/useSesion.js";
 export default function App() {
+  const { sesion, iniciarSesion, cerrarSesion } = useSesion();
   const [db, setDb] = useState(null);
   const [error, setError] = useState("");
   const [perfilId, setPerfil] = useState(() => {
@@ -23,6 +26,7 @@ export default function App() {
     }
   });
   const ubicacion = useLocation();
+  const esAcceso = Boolean(useMatch("/acceso.html"));
   const perfil = perfiles.find((p) => p.id === perfilId) ?? perfiles[0];
   // al abrir cargamos la demo, al salir dejamos de esperar la respuesta
   useEffect(() => {
@@ -58,18 +62,19 @@ export default function App() {
       "/inscripcion.html": "Inscripción",
       "/equipos.html": "Equipos",
       "/perfil.html": "Perfil",
+      "/acceso.html": "Acceso",
     };
     document.title =
       "eSports Arena Manager | " + (nombres[ubicacion.pathname] ?? "Inicio");
     window.scrollTo(0, 0);
   }, [ubicacion.pathname]);
-  if (error)
+  if (!esAcceso && error)
     return (
       <main className="contenedor seccion">
         <p role="alert">{error}</p>
       </main>
     );
-  if (!db)
+  if (!esAcceso && !db)
     return (
       <main className="contenedor seccion">
         <p role="status">Cargando la arena…</p>
@@ -83,6 +88,16 @@ export default function App() {
         <Route path="/" element={<Navigate to="/index.html" replace />} />
         <Route path="/index.html" element={<Inicio db={db} />} />
         <Route path="/torneos.html" element={<Torneos db={db} />} />
+        <Route
+          path="/acceso.html"
+          element={
+            <Acceso
+              sesion={sesion}
+              iniciarSesion={iniciarSesion}
+              cerrarSesion={cerrarSesion}
+            />
+          }
+        />
         <Route
           path="/detalle-torneo.html"
           element={<TorneoDetalle db={db} />}
@@ -109,10 +124,12 @@ export default function App() {
           }
         />
       </Routes>
-      <PiePagina
-        alReiniciar={() => setDb(arenaService.reiniciar())}
-        alActivarFechas={() => setDb(arenaService.activarFechas(db))}
-      />
+      {db && (
+        <PiePagina
+          alReiniciar={() => setDb(arenaService.reiniciar())}
+          alActivarFechas={() => setDb(arenaService.activarFechas(db))}
+        />
+      )}
     </>
   );
 }

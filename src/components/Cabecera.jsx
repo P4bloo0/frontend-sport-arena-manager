@@ -8,6 +8,7 @@ const enlaces = [
   ["inscripcion.html", "Inscripción"],
   ["equipos.html", "Equipos"],
   ["perfil.html", "Perfil"],
+  ["acceso.html", "Acceso"]
 ];
 export default function Cabecera({ perfil, onPerfilChange }) {
   const location = useLocation();
