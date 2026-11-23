@@ -14,7 +14,7 @@ import Perfil from "./pages/Perfil.jsx";
 import Acceso from "./pages/Acceso.jsx";
 import { useSesion } from "./hooks/useSesion.js";
 export default function App() {
-  const { sesion, iniciarSesion, cerrarSesion } = useSesion();
+  const { sesion, avisoSesion, iniciarSesion, cerrarSesion } = useSesion();
   const [db, setDb] = useState(null);
   const [error, setError] = useState("");
   const [perfilId, setPerfil] = useState(() => {
@@ -83,7 +83,7 @@ export default function App() {
   const props = { db, perfil, alCambiar: setDb };
   return (
     <>
-      <Cabecera perfil={perfilId} onPerfilChange={setPerfil} />
+      <Cabecera perfil={perfilId} onPerfilChange={setPerfil} sesion={sesion} />
       <Routes>
         <Route path="/" element={<Navigate to="/index.html" replace />} />
         <Route path="/index.html" element={<Inicio db={db} />} />
@@ -93,6 +93,7 @@ export default function App() {
           element={
             <Acceso
               sesion={sesion}
+              avisoSesion={avisoSesion}
               iniciarSesion={iniciarSesion}
               cerrarSesion={cerrarSesion}
             />

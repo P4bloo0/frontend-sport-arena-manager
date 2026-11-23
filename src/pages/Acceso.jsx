@@ -3,7 +3,7 @@ import Campo from "../components/Campo.jsx";
 import { authApi } from "../services/authApi.js";
 import { correoValido } from "../utils/logica.js";
 
-export default function Acceso({ sesion, iniciarSesion, cerrarSesion }) {
+export default function Acceso({ sesion, avisoSesion, iniciarSesion, cerrarSesion }) {
   const [registro, setRegistro] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [errores, setErrores] = useState({});
@@ -77,6 +77,7 @@ export default function Acceso({ sesion, iniciarSesion, cerrarSesion }) {
   return (
     <main className={`contenedor seccion acceso${registro && !sesion ? " acceso-registro" : ""}`}>
       <h1>{sesion ? "Mi sesión" : registro ? "Crear cuenta" : "Iniciar sesión"}</h1>
+      {!sesion && avisoSesion && <p role="status">{avisoSesion}</p>}
 
       {sesion ? (
         <>

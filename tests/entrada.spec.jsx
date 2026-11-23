@@ -4,3 +4,4 @@ import "../src/App.jsx";
 import "./logica.spec.js";
 import "./pantallas.spec.jsx";
 import "./modalidad.spec.jsx";
+import "./sesion.spec.jsx";

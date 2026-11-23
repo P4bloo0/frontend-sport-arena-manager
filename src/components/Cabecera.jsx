@@ -8,9 +8,9 @@ const enlaces = [
   ["inscripcion.html", "Inscripción"],
   ["equipos.html", "Equipos"],
   ["perfil.html", "Perfil"],
-  ["acceso.html", "Acceso"]
+  ["acceso.html", "Acceso"],
 ];
-export default function Cabecera({ perfil, onPerfilChange }) {
+export default function Cabecera({ perfil, onPerfilChange, sesion }) {
   const location = useLocation();
   return (
     <header className="encabezado">
@@ -32,7 +32,7 @@ export default function Cabecera({ perfil, onPerfilChange }) {
                     location.pathname === "/" + ruta ? "page" : undefined
                   }
                 >
-                  {texto}
+                  {ruta === "acceso.html" && sesion ? "Mi sesión" : texto}
                 </Link>
               </li>
             ))}

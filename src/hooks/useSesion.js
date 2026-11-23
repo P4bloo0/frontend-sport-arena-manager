@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { authApi } from "../services/authApi.js";
 
 const CLAVE = "arena_sesion";
+const AVISO_VENCIMIENTO = "Tu sesión venció. Vuelve a iniciar sesión.";
 
 function leerToken(token) {
   try {
@@ -10,7 +11,9 @@ function leerToken(token) {
     const { exp, sub, roles, userId } = JSON.parse(new TextDecoder().decode(bytes));
     const vence = exp * 1000;
 
-    if (!Number.isFinite(vence) || vence <= Date.now()) return null;
+    if (typeof exp !== "number" || !Number.isFinite(vence) || vence <= Date.now()) {
+      return null;
+    }
 
     return {
       token,
@@ -24,33 +27,75 @@ function leerToken(token) {
   }
 }
 
+function leerTokenGuardado() {
+  try {
+    return localStorage.getItem(CLAVE);
+  } catch {
+    return undefined;
+  }
+}
+
+function guardarToken(token) {
+  try {
+    if (token) localStorage.setItem(CLAVE, token);
+    else localStorage.removeItem(CLAVE);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function useSesion() {
-  const [sesion, setSesion] = useState(() => {
-    try {
-      return leerToken(localStorage.getItem(CLAVE));
-    } catch {
-      return null;
-    }
-  });
+  const [sesion, setSesion] = useState(() => leerToken(leerTokenGuardado()));
+  const [avisoSesion, setAvisoSesion] = useState("");
+  const activa = useRef(sesion);
+  const persistida = useRef(Boolean(sesion));
+
+  const aplicar = useCallback((nueva, aviso = "") => {
+    activa.current = nueva;
+    setSesion(nueva);
+    setAvisoSesion(aviso);
+  }, []);
+
+  const sincronizar = useCallback(() => {
+    const token = leerTokenGuardado();
+    if (token === undefined || token === (activa.current?.token ?? null)) return;
+
+    const nueva = leerToken(token);
+    persistida.current = Boolean(nueva);
+    aplicar(nueva, nueva ? "" : "Tu sesión se cerró en otra pestaña.");
+  }, [aplicar]);
 
   function iniciarSesion(token) {
     const nuevaSesion = leerToken(token);
     if (!nuevaSesion) throw new Error("El servidor no devolvió una sesión válida.");
-    setSesion(nuevaSesion);
+    persistida.current = guardarToken(token);
+    aplicar(nuevaSesion);
   }
 
   function cerrarSesion() {
-    setSesion(null);
+    guardarToken(null);
+    persistida.current = false;
+    aplicar(null);
   }
 
   useEffect(() => {
-    try {
-      if (sesion) localStorage.setItem(CLAVE, sesion.token);
-      else localStorage.removeItem(CLAVE);
-    } catch {
-      // La sesión sigue funcionando mientras esta pestaña esté abierta.
+    function cambioDeAlmacenamiento(evento) {
+      if (evento.key === CLAVE || evento.key === null) sincronizar();
     }
-  }, [sesion]);
+
+    window.addEventListener("storage", cambioDeAlmacenamiento);
+
+    const guardado = leerTokenGuardado();
+    if (guardado && !leerToken(guardado) && !activa.current) {
+      guardarToken(null);
+      aplicar(null, AVISO_VENCIMIENTO);
+    } else {
+      sincronizar();
+    }
+
+    return () => window.removeEventListener("storage", cambioDeAlmacenamiento);
+  }, [aplicar, sincronizar]);
 
   useEffect(() => {
     if (!sesion) return;
@@ -59,16 +104,29 @@ export function useSesion() {
     const restante = Math.max(0, sesion.vence - Date.now());
     let intento;
 
-    function terminar() {
-      setSesion((actual) => actual?.token === sesion.token ? null : actual);
+    function sigueActiva() {
+      if (control.signal.aborted || activa.current?.token !== sesion.token) return false;
+      const guardado = leerTokenGuardado();
+      if (persistida.current && guardado !== undefined && guardado !== sesion.token) {
+        sincronizar();
+        return false;
+      }
+      return true;
+    }
+
+    function terminar(aviso = AVISO_VENCIMIENTO) {
+      if (!sigueActiva()) return;
+      guardarToken(null);
+      persistida.current = false;
+      aplicar(null, aviso);
     }
 
     async function renovar() {
-      if (control.signal.aborted || Date.now() >= sesion.vence) return;
+      if (!sigueActiva() || Date.now() >= sesion.vence) return;
 
       try {
         const respuesta = await authApi.renovar(sesion.token, control.signal);
-        if (control.signal.aborted) return;
+        if (!sigueActiva()) return;
 
         const nueva = leerToken(respuesta?.token);
         if (!nueva) {
@@ -76,10 +134,11 @@ export function useSesion() {
           return;
         }
 
-        setSesion((actual) => actual?.token === sesion.token ? nueva : actual);
+        persistida.current = guardarToken(nueva.token);
+        aplicar(nueva);
       } catch (error) {
-        if (control.signal.aborted) return;
-        if ([401, 403, 409].includes(error.estado)) terminar();
+        if (!sigueActiva()) return;
+        if ([401, 403, 409].includes(error.estado)) terminar(error.message);
         else if (sesion.vence - Date.now() > 10000) {
           intento = setTimeout(renovar, 10000);
         }
@@ -95,7 +154,7 @@ export function useSesion() {
       clearTimeout(intento);
       clearTimeout(vencimiento);
     };
-  }, [sesion]);
+  }, [sesion, aplicar, sincronizar]);
 
-  return { sesion, iniciarSesion, cerrarSesion };
+  return { sesion, avisoSesion, iniciarSesion, cerrarSesion };
 }
