@@ -27,9 +27,7 @@ export default function App() {
     }
   });
   const ubicacion = useLocation();
-  const requiereDemo = ["/inscripcion.html", "/equipos.html"].some(
-    (ruta) => matchPath(ruta, ubicacion.pathname),
-  );
+  const requiereDemo = matchPath("/inscripcion.html", ubicacion.pathname);
   const perfil = perfiles.find((p) => p.id === perfilId) ?? perfiles[0];
   // al abrir cargamos la demo, al salir dejamos de esperar la respuesta
   useEffect(() => {
@@ -112,7 +110,11 @@ export default function App() {
         />
         <Route
           path="/equipos.html"
-          element={<Equipo key={perfilId} {...props} />}
+          element={
+            <RutaProtegida sesion={sesion}>
+              {sesion && <Equipo key={sesion.userId ?? sesion.nickname} sesion={sesion} />}
+            </RutaProtegida>
+          }
         />
         <Route
           path="/perfil.html"

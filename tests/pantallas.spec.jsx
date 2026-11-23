@@ -205,7 +205,7 @@ describe("pantallas de la evaluación", () => {
     ["/torneos.html", "Explora los torneos"],
     ["/detalle-torneo.html?id=5", "Copa Del Vacio"],
     ["/inscripcion.html?id=2", "Inscripción a torneo"],
-    ["/equipos.html", "Gestión de equipo"],
+    ["/equipos.html", "Iniciar sesión"],
     ["/perfil.html", "Iniciar sesión"],
   ];
   for (const [ruta, texto] of rutas)
@@ -384,21 +384,36 @@ describe("pantallas de la evaluación", () => {
     ).toBeTrue();
     expect(contenedor.textContent).toContain("inscripción vigente");
   });
-  it("equipo permite escoger capitán y valida claves antes de guardar", async () => {
-    const alCambiar = jasmine.createSpy("alCambiar");
-    await montar(<Equipo db={db} perfil={perfil} alCambiar={alCambiar} />);
-    await pulsar("button");
-    expect(contenedor.textContent).toContain("8 caracteres");
-    await escribir("#eq-nombre", "Equipo de prueba");
-    await elegir("#eq-juego", "Valorant");
-    await elegir("#eq-capitan", "2");
-    await escribir("#eq-clave", "Equipo123");
-    await escribir("#eq-clave2", "Equipo123");
-    await pulsar("button");
-    expect(alCambiar).toHaveBeenCalled();
-    const guardado = alCambiar.calls.mostRecent().args[0].equipos.at(-1);
-    expect(guardado.capitanId).toBe(2);
-    expect(guardado.clave).toBeUndefined();
+  it("crea un equipo usando la cuenta autenticada como capitán", async () => {
+    const sesion = { token: "token", userId: 17, nickname: "Capitana", roles: ["JUGADOR"] };
+    const equipo = { equipoId: 31, nombre: "Equipo real", juegoPrincipalId: 9, capitanId: 17, estado: true };
+    const fetchApi = spyOn(globalThis, "fetch").and.callFake(async (url, opciones) => {
+      const ruta = new URL(url).pathname.replace("/api/v1/", "");
+      if (opciones.method === "POST") {
+        expect(ruta).toBe("equipos");
+        expect(opciones.headers.Authorization).toBe("Bearer token");
+        expect(JSON.parse(opciones.body)).toEqual({
+          nombre: "Equipo real", juegoPrincipalId: 9, capitanId: 17,
+        });
+        return { ok: true, json: async () => equipo };
+      }
+      const respuestas = {
+        "equipos/mis": [],
+        juegos: [{ juegoId: 9, nombre: "Valorant", estado: true }],
+        "usuarios/jugadores": [],
+        "equipos/31/miembros": [{ usuarioId: 17, rolDentroEquipo: "CAPITAN" }],
+      };
+      return { ok: Object.hasOwn(respuestas, ruta), json: async () => respuestas[ruta] };
+    });
+
+    await montar(<Equipo sesion={sesion} />);
+    await escribir("#eq-crear-nombre", "Equipo real");
+    await elegir("#eq-crear-juego", "9");
+    await pulsar("form button");
+    expect(fetchApi).toHaveBeenCalled();
+    expect(contenedor.textContent).toContain("Equipo creado.");
+    expect(contenedor.querySelector("tbody").textContent).toContain("Capitana");
+    expect(contenedor.querySelector("tbody button")).toBeNull();
   });
   it("perfil rechaza un correo malo y luego guarda el correcto", async () => {
     const alCambiar = jasmine.createSpy("alCambiar");
@@ -441,18 +456,59 @@ describe("pantallas de la evaluación", () => {
     await montar(<App />, "/inscripcion.html");
     expect(contenedor.textContent).toContain("No se pudieron cargar");
   });
-  it("editar, agregar integrante y guardar conserva la nueva alineación", async () => {
-    spyOn(arenaService, 'cargar').and.resolveTo(db);
-    await montar(<App />, '/equipos.html');
-    await elegir('#selector-perfil', 'jugador-elegible');
-    const tarjeta = [...contenedor.querySelectorAll('.tarjeta-torneo')].find(t => t.textContent.includes('Lancer Fan Club'));
-    await act(async () => [...tarjeta.querySelectorAll('button')].find(b => b.textContent === 'Editar equipo').click());
-    await elegir('#int-jugador', '1');
-    await escribir('#int-rol', 'Apoyo');
-    await act(async () => contenedor.querySelectorAll('form')[1].querySelector('button').click());
-    expect(contenedor.querySelectorAll('tbody tr').length).toBe(6);
-    await act(async () => contenedor.querySelectorAll('form')[0].querySelector('button').click());
-    expect(contenedor.querySelectorAll('tbody tr').length).toBe(6);
-    expect([...contenedor.querySelectorAll('tbody tr')].some(f => f.textContent.includes('PepitoElPro'))).toBeTrue();
+  it("permite al capitán agregar y quitar integrantes y limita al resto a consultar", async () => {
+    const equipo = { equipoId: 31, nombre: "Equipo real", juegoPrincipalId: 9, capitanId: 17, estado: true };
+    const respuestas = {
+      "equipos/mis": [equipo],
+      juegos: [{ juegoId: 9, nombre: "Valorant", estado: true }],
+      "usuarios/jugadores": [
+        { usuarioId: 17, nickname: "Capitana" },
+        { usuarioId: 19, nickname: "Apoyo" },
+      ],
+      "equipos/31/miembros": [{ usuarioId: 17, rolDentroEquipo: "CAPITAN" }],
+    };
+    const fetchApi = spyOn(globalThis, "fetch").and.callFake(async (url, opciones) => {
+      const ruta = new URL(url).pathname.replace("/api/v1/", "");
+      if (opciones.method === "POST" && ruta === "equipos/miembros") {
+        expect(JSON.parse(opciones.body)).toEqual({
+          equipoId: 31, usuarioId: 19, rolDentroEquipo: "SUPLENTE",
+        });
+        return { ok: true, json: async () => ({ usuarioId: 19, rolDentroEquipo: "SUPLENTE" }) };
+      }
+      if (opciones.method === "PUT" && ruta === "equipos/31") {
+        expect(JSON.parse(opciones.body)).toEqual({
+          nombre: "Equipo actualizado", juegoPrincipalId: 9, capitanId: 17,
+        });
+        return { ok: true, json: async () => ({ ...equipo, nombre: "Equipo actualizado" }) };
+      }
+      if (opciones.method === "DELETE" && ruta === "equipos/31/miembros/19") {
+        return { ok: true, json: async () => { throw new SyntaxError("Sin contenido"); } };
+      }
+      return { ok: Object.hasOwn(respuestas, ruta), json: async () => respuestas[ruta] };
+    });
+
+    const sesion = { token: "token", userId: 17, nickname: "Capitana", roles: ["JUGADOR"] };
+    await montar(<Equipo sesion={sesion} />);
+    await elegir("#eq-seleccion", "31");
+    await elegir("#int-jugador", "19");
+    await elegir("#int-rol", "SUPLENTE");
+    await pulsar("form:has(#int-rol) button");
+    expect(contenedor.querySelector("tbody").textContent).toContain("Apoyo");
+    await escribir("#eq-editar-nombre", "Equipo actualizado");
+    await pulsar("form:has(#eq-editar-nombre) button");
+    expect(contenedor.querySelector("h3").textContent).toBe("Equipo actualizado");
+    expect(contenedor.querySelector("tbody").textContent).toContain("Apoyo");
+    await pulsar('button[aria-label="Quitar a Apoyo"]');
+    expect(contenedor.querySelector("tbody").textContent).not.toContain("Apoyo");
+    expect(fetchApi).toHaveBeenCalledWith(jasmine.stringMatching(/equipos\/31\/miembros\/19$/),
+      jasmine.objectContaining({ method: "DELETE" }));
+
+    await act(async () => raiz.unmount());
+    raiz = createRoot(contenedor);
+    await montar(<Equipo sesion={{ ...sesion, userId: 19, nickname: "Apoyo" }} />);
+    await elegir("#eq-seleccion", "31");
+    expect(contenedor.querySelector("tbody").textContent).toContain("Capitana");
+    expect(contenedor.querySelector("#int-jugador")).toBeNull();
+    expect(contenedor.querySelector("#eq-editar-nombre")).toBeNull();
   });
 });
