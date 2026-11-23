@@ -1,36 +1,19 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import TarjetaTorneo from "../components/TarjetaTorneo.jsx";
-import { torneosApi } from "../services/torneosApi.js";
+import { useCatalogoTorneos } from "../hooks/useCatalogoTorneos.js";
 
 const vacios = { nombre: "", juego: "", estado: "", desde: "", hasta: "" };
 const estados = ["Borrador", "Abierto", "En curso", "Finalizado"];
 
 export default function Torneos() {
   const [filtros, setFiltros] = useState(vacios);
-  const [db, setDb] = useState(null);
-  const [errorCarga, setErrorCarga] = useState("");
-
-  useEffect(() => {
-    const control = new AbortController();
-
-    torneosApi.cargarCatalogo(control.signal)
-      .then((datos) => {
-        if (!control.signal.aborted) setDb(datos);
-      })
-      .catch(() => {
-        if (!control.signal.aborted) {
-          setErrorCarga("No se pudieron cargar los torneos. Revisa que el backend esté encendido.");
-        }
-      });
-
-    return () => control.abort();
-  }, []);
+  const { catalogo, error: errorCarga } = useCatalogoTorneos();
 
   if (errorCarga) {
     return <main className="contenedor" role="alert">{errorCarga}</main>;
   }
 
-  if (!db) {
+  if (!catalogo) {
     return <main className="contenedor" role="status">Cargando torneos…</main>;
   }
 
@@ -40,7 +23,7 @@ export default function Torneos() {
       : "";
   const lista = error
     ? []
-    : db.torneos.filter(
+    : catalogo.torneos.filter(
         (t) =>
           t.nombre
             .toLowerCase()
@@ -86,7 +69,7 @@ export default function Torneos() {
                 onChange={cambiar}
               >
                 <option value="">Todos los juegos</option>
-                {db.juegos.map((j) => (
+                {catalogo.juegos.map((j) => (
                   <option key={j.id}>{j.nombre}</option>
                 ))}
               </select>
@@ -155,7 +138,6 @@ export default function Torneos() {
             <TarjetaTorneo
               key={t.id}
               torneo={t}
-              mostrarDetalle={false}
             />
           ))}
         </div>
@@ -164,7 +146,7 @@ export default function Torneos() {
             <p className="icono-estado" aria-hidden="true">
               ⌕
             </p>
-            {db.torneos.length ? (
+            {catalogo.torneos.length ? (
               <>
                 <h2>No encontramos torneos</h2>
                 <p>Prueba quitando algunos filtros o usa otro nombre de búsqueda.</p>

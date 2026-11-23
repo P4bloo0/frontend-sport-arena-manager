@@ -25,7 +25,7 @@ export default function ListaPartidas({ partidas, db }) {
             return (
               <tr key={partida.id}>
                 <td>{partida.ronda}</td>
-                <td>{nombreParticipante(db, partida.localId)} vs {nombreParticipante(db, partida.visitanteId)}</td>
+                <td>{partida.localNombre ?? nombreParticipante(db, partida.localId)} vs {partida.visitanteNombre ?? nombreParticipante(db, partida.visitanteId)}</td>
                 <td>{partida.fechaHora}</td>
                 <td><Estado estado={partida.estado} /></td>
                 <td>{resultado ? `${resultado.puntajeLocal} - ${resultado.puntajeVisitante}` : "Por definir"}</td>

@@ -1,11 +1,16 @@
-// es tu mismo inicio, las tarjetas ahora se dibujan con react
 import { Link } from "react-router-dom";
 import TarjetaTorneo from "../components/TarjetaTorneo.jsx";
-import { formatearFecha } from "../utils/logica.js";
-export default function Inicio({ db }) {
-  const cierres = [...db.torneos]
-    .filter((t) => t.estado === "Abierto")
+import { useCatalogoTorneos } from "../hooks/useCatalogoTorneos.js";
+import { formatearFecha, hoy } from "../utils/logica.js";
+export default function Inicio() {
+  const { catalogo, error } = useCatalogoTorneos();
+  const torneos = catalogo?.torneos ?? [];
+  const fecha = hoy();
+  const cierres = torneos
+    .filter((t) => t.estado === "Abierto" && t.cierre >= fecha)
     .sort((a, b) => a.cierre.localeCompare(b.cierre))
+    .slice(0, 3);
+  const destacados = [...cierres, ...torneos.filter((t) => t.estado === "En curso")]
     .slice(0, 3);
   return (
     <main>
@@ -42,16 +47,11 @@ export default function Inicio({ db }) {
             Ver todos los torneos →
           </Link>
         </div>
-        <div className="rejilla-torneos" aria-live="polite">
-          {db.torneos
-            .filter((t) => t.destacado)
-            .map((t) => (
-              <TarjetaTorneo
-                key={t.id}
-                torneo={t}
-                inscripciones={db.inscripciones}
-              />
-            ))}
+        {error && <p role="alert">{error}</p>}
+        {!catalogo && !error && <p role="status">Cargando torneos.</p>}
+        {catalogo && !destacados.length && <p>No hay torneos activos.</p>}
+        <div className="rejilla-torneos">
+          {destacados.map((torneo) => <TarjetaTorneo key={torneo.id} torneo={torneo} />)}
         </div>
       </section>
       <section className="seccion seccion-oscura">
@@ -60,6 +60,7 @@ export default function Inicio({ db }) {
             <p className="etiqueta">INSCRIPCIONES</p>
             <h2>Próximos cierres</h2>
             <p>No dejes tu inscripción para el último minuto.</p>
+            {catalogo && !cierres.length && <p>No hay cierres próximos.</p>}
             <ul className="lista-cierres">
               {cierres.map((t) => (
                 <li key={t.id}>
@@ -76,8 +77,8 @@ export default function Inicio({ db }) {
               Revisa los requisitos del torneo, confirma que tu equipo esté
               completo y participa antes de la fecha de cierre.
             </p>
-            <Link className="btn btn-secondary boton boton-secundario" to="/inscripcion.html">
-              Ir a inscripción
+            <Link className="btn btn-secondary boton boton-secundario" to="/torneos.html">
+              Ver torneos
             </Link>
           </article>
         </div>

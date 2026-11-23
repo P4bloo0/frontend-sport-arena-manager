@@ -1,21 +1,18 @@
-// el selector cambia la dirección y react muestra el torneo elegido
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ListaPartidas from "../components/ListaPartidas.jsx";
-import { Link, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { Estado } from "../components/TarjetaTorneo.jsx";
 import { Ficha, LlaveTorneo, TablaRanking } from "../components/Tablas.jsx";
-import {
-  cuposDisponibles,
-  formatearFecha,
-  nombreParticipante,
-  rankingTorneo,
-} from "../utils/logica.js";
-export default function TorneoDetalle({ db }) {
+import { useCatalogoTorneos } from "../hooks/useCatalogoTorneos.js";
+import { torneosApi } from "../services/torneosApi.js";
+import { formatearFecha } from "../utils/logica.js";
+
+export default function TorneoDetalle() {
   const [busqueda, setBusqueda] = useSearchParams();
-  const id = Number(busqueda.get("id") ?? 1);
-  const torneo = db.torneos.find((t) => t.id === id);
-  const partidas = db.partidas.filter((p) => p.torneoId === id);
-  const inscritos = db.inscripciones.filter((i) => i.torneoId === id);
+  const { catalogo, error } = useCatalogoTorneos();
+  const torneos = catalogo?.torneos ?? [];
+  const id = Number(busqueda.get("id") ?? torneos[0]?.id);
+  const torneo = torneos.find((t) => t.id === id);
   return (
     <main className="contenedor pagina-detalle">
       <section className="titulo-pagina">
@@ -26,115 +23,134 @@ export default function TorneoDetalle({ db }) {
           llave, calendario de partidas, tabla de posiciones y premios.
         </p>
       </section>
-      <div className="campo selector-detalle">
-        <label htmlFor="selector-torneo">Ver torneo</label>
-        <select className="form-select"
-          id="selector-torneo"
-          value={torneo ? id : ""}
-          onChange={(e) => setBusqueda({ id: e.target.value })}
-        >
-          <option value="" disabled>
-            Selecciona un torneo
-          </option>
-          {db.torneos.map((t) => (
-            <option value={t.id} key={t.id}>
-              {t.nombre}
-            </option>
-          ))}
-        </select>
-      </div>
-      {!torneo ? (
-        <p className="alert alert-info aviso-vacio" role="alert">
-          El torneo no existe.
-        </p>
-      ) : (
-        <div className="detalle-torneo">
-          <div className="detalle-encabezado">
-            <h2>{torneo.nombre}</h2>
-            <Estado estado={torneo.estado} />
-            <Link
-              className="btn btn-primary boton boton-primario"
-              to={"/inscripcion.html?id=" + id}
+      {error && <p role="alert">{error}</p>}
+      {!catalogo && !error && <p role="status">Cargando torneos.</p>}
+      {catalogo && (
+        <>
+          <div className="campo selector-detalle">
+            <label htmlFor="selector-torneo">Ver torneo</label>
+            <select className="form-select"
+              id="selector-torneo"
+              value={torneo ? id : ""}
+              onChange={(e) => setBusqueda({ id: e.target.value })}
+              disabled={!torneos.length}
             >
-              Inscribirme
-            </Link>
+              <option value="" disabled>Selecciona un torneo</option>
+              {torneos.map((t) => (
+                <option value={t.id} key={t.id}>{t.nombre}</option>
+              ))}
+            </select>
           </div>
-          <Ficha
-            filas={[
-              ["Juego", torneo.juego],
-              ["Modalidad", torneo.modalidad],
-              ["Estado", torneo.estado],
-              [
-                "Cupo",
-                `${torneo.cupoMaximo - cuposDisponibles(torneo, db.inscripciones)} / ${torneo.cupoMaximo}`,
-              ],
-              ["Cupos disponibles", cuposDisponibles(torneo, db.inscripciones)],
-              ["Cierre de inscripción", formatearFecha(torneo.cierre)],
-            ]}
-          />
-          <section>
-            <h3>Participantes inscritos</h3>
-            {!inscritos.length ? (
-              <p className="alert alert-info aviso-vacio">
-                Todavía no hay participantes inscritos.
-              </p>
-            ) : (
-              <div className="table-responsive tabla-scroll">
-                <table className="table table-hover tabla">
-                  <thead>
-                    <tr>
-                      <th>Participante</th>
-                      <th>Estado</th>
-                      <th>Inscrito</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {inscritos.map((i) => (
-                      <tr key={i.id}>
-                        <td>
-                          {nombreParticipante(
-                            db,
-                            i.equipoId ?? i.jugadorId,
-                            i.equipoId == null ? "jugador" : "equipo",
-                          )}
-                        </td>
-                        <td>
-                          <Estado estado={i.estado} />
-                        </td>
-                        <td>{formatearFecha(i.fecha)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </section>
-          <DetallePartidas key={id} partidas={partidas} db={db} />
-          <section>
-            <h3>Tabla de posiciones</h3>
-            <TablaRanking filas={rankingTorneo(db, id)} />
-          </section>
-          <section>
-            <h3>Premios</h3>
-            {torneo.estado === "Finalizado" ? (
-              <ul>
-                {db.premios
-                  .filter((p) => p.torneoId === id)
-                  .map((p) => (
-                    <li key={p.posicion}>
-                      {p.posicion}° lugar: {p.descripcion}
-                    </li>
-                  ))}
-              </ul>
-            ) : (
-              <p className="alert alert-info aviso-vacio">
-                Los premios por posición se publican al finalizar el torneo.
-              </p>
-            )}
-          </section>
-        </div>
+          {torneo ? (
+            <FichaTorneo key={id} torneo={torneo} />
+          ) : (
+            <p className="alert alert-info aviso-vacio" role="status">
+              {busqueda.has("id") ? "El torneo no existe." : "No hay torneos disponibles."}
+            </p>
+          )}
+        </>
       )}
     </main>
+  );
+}
+
+function FichaTorneo({ torneo }) {
+  const [detalle, setDetalle] = useState(null);
+  const [error, setError] = useState("");
+  const { id, cupoActual, cupoMaximo } = torneo;
+
+  useEffect(() => {
+    const control = new AbortController();
+    torneosApi.cargarDetalle(id, control.signal)
+      .then((datos) => {
+        if (!control.signal.aborted) setDetalle(datos);
+      })
+      .catch(() => {
+        if (!control.signal.aborted) setError("No se pudieron cargar los datos de la competencia.");
+      });
+
+    return () => control.abort();
+  }, [id]);
+
+  return (
+    <div className="detalle-torneo">
+      <div className="detalle-encabezado">
+        <h2>{torneo.nombre}</h2>
+        <Estado estado={torneo.estado} />
+      </div>
+      <Ficha
+        filas={[
+          ["Juego", torneo.juego],
+          ["Modalidad", torneo.modalidad],
+          ["Estado", torneo.estado],
+          ["Cupo", `${cupoActual} / ${cupoMaximo}`],
+          ["Cupos disponibles", Math.max(0, cupoMaximo - cupoActual)],
+          ["Cierre de inscripción", formatearFecha(torneo.cierre)],
+        ]}
+      />
+      {error && <p role="alert">{error}</p>}
+      {!detalle && !error && <p role="status">Cargando datos de la competencia.</p>}
+      {detalle && <Competencia detalle={detalle} finalizado={torneo.estado === "Finalizado"} />}
+    </div>
+  );
+}
+
+function Competencia({ detalle, finalizado }) {
+  return (
+    <>
+      <section>
+        <h3>Participantes inscritos</h3>
+        {!detalle.inscritos.length ? (
+          <p className="alert alert-info aviso-vacio">
+            Todavía no hay participantes inscritos.
+          </p>
+        ) : (
+          <div className="table-responsive tabla-scroll">
+            <table className="table table-hover tabla">
+              <thead>
+                <tr>
+                  <th>Participante</th>
+                  <th>Estado</th>
+                  <th>Inscrito</th>
+                </tr>
+              </thead>
+              <tbody>
+                {detalle.inscritos.map((i) => (
+                  <tr key={i.id}>
+                    <td>{i.nombre}</td>
+                    <td>
+                      <Estado estado={i.estado} />
+                    </td>
+                    <td>{formatearFecha(i.fecha)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+      <DetallePartidas partidas={detalle.partidas} db={detalle} />
+      <section>
+        <h3>Tabla de posiciones</h3>
+        <TablaRanking filas={detalle.ranking} />
+      </section>
+      <section>
+        <h3>Premios</h3>
+        {!finalizado && (
+          <p className="alert alert-info aviso-vacio">
+            Los premios por posición se publican al finalizar el torneo.
+          </p>
+        )}
+        {finalizado && !detalle.premios.length && <p>No hay premios publicados.</p>}
+        {finalizado && detalle.premios.length > 0 && (
+          <ul>
+            {detalle.premios.map((premio) => (
+              <li key={premio.posicion}>{premio.posicion}º lugar: {premio.descripcion}</li>
+            ))}
+          </ul>
+        )}
+      </section>
+    </>
   );
 }
 

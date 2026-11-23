@@ -27,7 +27,7 @@ export default function App() {
     }
   });
   const ubicacion = useLocation();
-  const requiereDemo = !["/acceso.html", "/perfil.html"].some(
+  const requiereDemo = ["/inscripcion.html", "/equipos.html"].some(
     (ruta) => matchPath(ruta, ubicacion.pathname),
   );
   const perfil = perfiles.find((p) => p.id === perfilId) ?? perfiles[0];
@@ -89,8 +89,8 @@ export default function App() {
       <Cabecera perfil={perfilId} onPerfilChange={setPerfil} sesion={sesion} />
       <Routes>
         <Route path="/" element={<Navigate to="/index.html" replace />} />
-        <Route path="/index.html" element={<Inicio db={db} />} />
-        <Route path="/torneos.html" element={<Torneos db={db} />} />
+        <Route path="/index.html" element={<Inicio />} />
+        <Route path="/torneos.html" element={<Torneos />} />
         <Route
           path="/acceso.html"
           element={
@@ -104,7 +104,7 @@ export default function App() {
         />
         <Route
           path="/detalle-torneo.html"
-          element={<TorneoDetalle db={db} />}
+          element={<TorneoDetalle />}
         />
         <Route
           path="/inscripcion.html"

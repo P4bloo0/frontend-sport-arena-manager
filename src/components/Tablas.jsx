@@ -10,7 +10,7 @@ export function TablaRanking({ filas }) {
       <table className="table table-hover tabla">
         <thead>
           <tr>
-            {["Pos.", "Equipo", "PJ", "PG", "PP", "Dif.", "Puntos"].map((t) => (
+            {["Pos.", "Participante", "PJ", "PG", "PP", "Dif.", "Puntos"].map((t) => (
               <th key={t}>{t}</th>
             ))}
           </tr>
@@ -18,7 +18,7 @@ export function TablaRanking({ filas }) {
         <tbody>
           {filas.map((f, i) => (
             <tr key={f.id}>
-              <td>{i + 1}</td>
+              <td>{f.posicion ?? i + 1}</td>
               <td>{f.nombre}</td>
               <td>{f.jugadas}</td>
               <td>{f.ganadas}</td>
@@ -50,11 +50,11 @@ export function LlaveTorneo({ partidas, db }) {
               return (
                 <article className="llave-cruce" key={p.id}>
                   <strong>
-                    {nombreParticipante(db, p.localId)}{" "}
+                    {p.localNombre ?? nombreParticipante(db, p.localId)}{" "}
                     {resultado ? resultado.puntajeLocal : "—"}
                   </strong>
                   <span>
-                    {nombreParticipante(db, p.visitanteId)}{" "}
+                    {p.visitanteNombre ?? nombreParticipante(db, p.visitanteId)}{" "}
                     {resultado ? resultado.puntajeVisitante : "—"}
                   </span>
                   <small>{p.fechaHora}</small>

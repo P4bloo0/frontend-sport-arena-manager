@@ -19,6 +19,7 @@ describe("pantallas de la evaluación", () => {
   let contenedor, raiz, db;
   beforeEach(() => {
     db = prepararDatos();
+    db.torneos = db.torneos.map((torneo) => ({ ...torneo, cupoActual: 2 }));
     spyOn(torneosApi, "cargarCatalogo").and.callFake(async () => db);
     contenedor = document.createElement("div");
     document.body.appendChild(contenedor);
@@ -58,6 +59,49 @@ describe("pantallas de la evaluación", () => {
   async function pulsar(selector) {
     await act(async () => contenedor.querySelector(selector).click());
   }
+  function simularApiDeDetalle() {
+    return spyOn(globalThis, "fetch").and.callFake(async (url) => {
+      const ruta = new URL(url).pathname;
+      const id = Number(ruta.split("/").at(-1));
+      const partidas = db.partidas.filter((p) => p.torneoId === id);
+      let datos;
+
+      if (ruta.includes("/inscripciones/")) {
+        datos = db.inscripciones.filter((i) => i.torneoId === id).map((i) => ({
+          inscripcionId: i.id, equipoId: i.equipoId, jugadorId: i.jugadorId,
+          estado: i.estado === "Aceptada" ? "CONFIRMADA" : i.estado.toUpperCase(),
+          fechaInscripcion: i.fecha,
+        }));
+      } else if (ruta.includes("/partidas/")) {
+        datos = partidas.map((p) => ({
+          partidaId: p.id, participanteAId: p.localId, participanteBId: p.visitanteId,
+          ronda: p.ronda, fechaHora: p.fechaHora, estado: p.estado.toUpperCase(),
+        }));
+      } else if (ruta.includes("/resultados/")) {
+        datos = db.resultados.filter((r) => partidas.some((p) => p.id === r.partidaId)).map((r) => ({
+          partidaId: r.partidaId, puntajeA: r.puntajeLocal, puntajeB: r.puntajeVisitante,
+          estadoValidacion: r.validado ? "VALIDADO" : "PENDIENTE",
+        }));
+      } else if (ruta.includes("/rankings/")) {
+        datos = id === 5 ? [{
+          rankingId: 10, participanteId: 1, posicion: 1, victorias: 2,
+          derrotas: 0, diferencia: 5, puntos: 6,
+        }] : [];
+      } else if (ruta.endsWith("/premios")) {
+        const torneoId = Number(ruta.split("/").at(-2));
+        datos = db.premios.filter((p) => p.torneoId === torneoId);
+      } else if (ruta.endsWith("/equipos")) {
+        datos = db.equipos.map((e) => ({ equipoId: e.id, nombre: e.nombre }));
+      } else if (ruta.endsWith("/usuarios/jugadores")) {
+        datos = db.jugadores.map((j) => ({ usuarioId: j.id, nickname: j.apodo }));
+      } else {
+        throw new Error(`Ruta inesperada: ${ruta}`);
+      }
+
+      return { ok: true, json: async () => datos };
+    });
+  }
+
   function Formulario({ alInscribir }) {
     const [datos, setDatos] = useState({
       torneoId: "2",
@@ -167,6 +211,7 @@ describe("pantallas de la evaluación", () => {
   for (const [ruta, texto] of rutas)
     it("abre la vista " + ruta, async () => {
       spyOn(arenaService, "cargar").and.resolveTo(db);
+      if (ruta.startsWith("/detalle-torneo.html")) simularApiDeDetalle();
       await montar(<App />, ruta);
       expect(contenedor.textContent).toContain(texto);
       expect(contenedor.querySelectorAll("main").length).toBe(1);
@@ -226,6 +271,7 @@ describe("pantallas de la evaluación", () => {
     spyOn(arenaService, "cargar").and.resolveTo(db);
     await montar(<App />);
     expect(contenedor.querySelector(".imagen-hero").alt).toContain("Jugadores");
+    expect(contenedor.querySelector(".lista-cierres").textContent).toContain("Arena Táctica De Peru");
     expect(contenedor.querySelector("source").getAttribute("src")).toBe(
       "/assets/video/esports.mp4",
     );
@@ -233,6 +279,8 @@ describe("pantallas de la evaluación", () => {
   it("catálogo busca, limpia y avisa de fechas invertidas", async () => {
     spyOn(arenaService, "cargar").and.resolveTo(db);
     await montar(<App />, "/torneos.html");
+    expect(contenedor.querySelector(".tarjeta-torneo a").getAttribute("href"))
+      .toBe("/detalle-torneo.html?id=1");
     await escribir("#buscador", "no existe");
     expect(contenedor.textContent).toContain("No encontramos torneos");
     await pulsar('button[type="button"]');
@@ -241,17 +289,55 @@ describe("pantallas de la evaluación", () => {
     await escribir("#fecha-fin", "2026-10-01");
     expect(contenedor.textContent).toContain("posterior");
   });
+  it("abre desde Inicio un torneo de la API ajeno a la demostración", async () => {
+    torneosApi.cargarCatalogo.and.callThrough();
+    spyOn(arenaService, "cargar").and.rejectWith(new Error("demo no disponible"));
+    const respuestas = {
+      "/api/v1/torneos": [{
+        torneoId: 81, nombre: "Copa real", juegoId: 11,
+        modalidad: "ELIMINACION_DIRECTA", estado: "ABIERTO",
+        fechaCierreInscripcion: "2099-12-31T23:59:00", cupoActual: 1, cupoMaximo: 8,
+      }],
+      "/api/v1/juegos": [{ juegoId: 11, nombre: "Valorant", estado: true }],
+      "/api/v1/inscripciones/torneo/81": [{
+        inscripcionId: 51, jugadorId: 9, estado: "CONFIRMADA",
+        fechaInscripcion: "2099-12-01T15:00:00",
+      }],
+      "/api/v1/partidas/torneo/81": [],
+      "/api/v1/resultados/torneo/81": [],
+      "/api/v1/rankings/torneo/81": [],
+      "/api/v1/torneos/81/premios": [],
+      "/api/v1/usuarios/jugadores": [{ usuarioId: 9, nickname: "ArenaPlayer" }],
+    };
+    spyOn(globalThis, "fetch").and.callFake(async (url) => {
+      const ruta = new URL(url).pathname;
+      return { ok: Object.hasOwn(respuestas, ruta), json: async () => respuestas[ruta] };
+    });
+
+    await montar(<App />);
+    expect(contenedor.querySelector(".tarjeta-torneo").textContent).toContain("Copa real");
+    await pulsar(".tarjeta-torneo a");
+    expect(contenedor.querySelector(".detalle-encabezado h2").textContent).toBe("Copa real");
+    expect(contenedor.querySelector(".ficha-datos").textContent).toContain("1 / 8");
+    expect(contenedor.querySelector(".detalle-torneo tbody").textContent).toContain("ArenaPlayer");
+  });
+
   it("detalle muestra resultados, premios y cambia el torneo por el selector", async () => {
     spyOn(arenaService, "cargar").and.resolveTo(db);
+    simularApiDeDetalle();
     await montar(<App />, "/detalle-torneo.html?id=5");
     expect(contenedor.textContent).toContain("1.000 USD");
     expect(contenedor.textContent).toContain("Los Salchipapas");
+    expect(contenedor.querySelector(".detalle-torneo .ficha-datos").textContent).toContain("2 /");
+    expect(contenedor.querySelector(".detalle-torneo .tabla tbody").textContent).toContain("Confirmada");
+    expect(contenedor.querySelector(".detalle-torneo section:nth-last-of-type(2) tbody").textContent).toContain("Los Salchipapas");
     await elegir("#selector-torneo", "2");
     expect(contenedor.textContent).toContain("Arena Táctica De Peru");
     expect(contenedor.textContent).not.toContain("1.000 USD");
   });
   it("filtra calendario y llave por ronda y reinicia al cambiar de torneo", async () => {
     spyOn(arenaService, "cargar").and.resolveTo(db);
+    simularApiDeDetalle();
     await montar(<App />, "/detalle-torneo.html?id=5");
     expect(contenedor.querySelectorAll("#calendario-visible tbody tr").length).toBe(3);
     await elegir("#selector-ronda", "Final");
@@ -271,6 +357,7 @@ describe("pantallas de la evaluación", () => {
   });
   it("muestra el calendario vacío sin selector si no hay partidas", async () => {
     spyOn(arenaService, "cargar").and.resolveTo(db);
+    simularApiDeDetalle();
     await montar(<App />, "/detalle-torneo.html?id=2");
     expect(contenedor.querySelector("#selector-ronda")).toBeNull();
     expect(contenedor.querySelector("#calendario-visible").textContent).toContain("No hay partidas programadas");
@@ -351,7 +438,7 @@ describe("pantallas de la evaluación", () => {
   });
   it("muestra un error cuando falla la carga de datos", async () => {
     spyOn(arenaService, "cargar").and.rejectWith(new Error("fallo simulado"));
-    await montar(<App />);
+    await montar(<App />, "/inscripcion.html");
     expect(contenedor.textContent).toContain("No se pudieron cargar");
   });
   it("editar, agregar integrante y guardar conserva la nueva alineación", async () => {
