@@ -261,6 +261,84 @@ describe("pantallas de la evaluación", () => {
     expect(contenedor.textContent).toContain("Administración");
   });
 
+  it("reserva el enlace y la ruta de Administración para administradores", async () => {
+    const datos = { exp: Math.floor(Date.now() / 1000) + 120, sub: "jugador",
+      userId: 7, roles: ["JUGADOR"] };
+    const jwt = `cabecera.${btoa(JSON.stringify(datos)).replace(/=+$/, "")}.firma`;
+    localStorage.getItem.withArgs("arena_sesion").and.returnValue(jwt);
+    const fetchApi = spyOn(globalThis, "fetch");
+    await montar(<App />, "/administracion.html");
+    expect(contenedor.textContent).toContain("Acceso restringido");
+    expect(contenedor.querySelector('nav a[href="/administracion.html"]')).toBeNull();
+    expect(fetchApi).not.toHaveBeenCalled();
+  });
+
+  it("gestiona juegos, torneos y premios con las credenciales de administrador", async () => {
+    const datos = { exp: Math.floor(Date.now() / 1000) + 120, sub: "admin",
+      userId: 7, roles: ["ADMINISTRADOR"] };
+    const jwt = `cabecera.${btoa(JSON.stringify(datos)).replace(/=+$/, "")}.firma`;
+    localStorage.getItem.withArgs("arena_sesion").and.returnValue(jwt);
+    const juego = { juegoId: 9, nombre: "Valorant", genero: "FPS", modalidad: "5v5", jugadoresPorEquipo: 5, estado: true };
+    const torneo = { torneoId: 81, nombre: "Copa real", juegoId: 9, estado: "BORRADOR" };
+    spyOn(globalThis, "fetch").and.callFake(async (url, peticion) => {
+      const { pathname, search } = new URL(url);
+      const ruta = pathname.replace("/api/v1/", "") + search;
+      const { method, body, headers } = peticion;
+      if (method !== "GET" || ruta.endsWith("configuracion")) {
+        expect(headers.Authorization).toBe(`Bearer ${jwt}`);
+      }
+      let respuesta;
+      if (method === "GET" && ["juegos", "torneos", "torneos/81/premios/configuracion"].includes(ruta)) {
+        respuesta = [];
+      } else if (method === "POST" && ruta === "juegos") {
+        expect(JSON.parse(body).jugadoresPorEquipo).toBe(5);
+        respuesta = juego;
+      } else if (method === "POST" && ruta === "torneos") {
+        expect(JSON.parse(body)).toEqual(jasmine.objectContaining({ juegoId: 9, cupoMaximo: 8 }));
+        respuesta = { ...JSON.parse(body), ...torneo };
+      } else if (method === "PUT" && ruta === "torneos/81/estado?nuevo=ABIERTO") {
+        respuesta = { ...torneo, estado: "ABIERTO" };
+      } else if (method === "POST" && ruta === "torneos/81/premios") {
+        expect(JSON.parse(body)).toEqual({ posicion: 1, descripcion: "Trofeo" });
+        respuesta = JSON.parse(body);
+      } else {
+        throw new Error(`Petición inesperada: ${method} ${ruta}`);
+      }
+      return { ok: true, json: async () => respuesta };
+    });
+    const boton = async (texto) => act(async () => {
+      [...contenedor.querySelectorAll("button")].find((b) => b.textContent === texto).click();
+    });
+
+    await montar(<App />, "/administracion.html");
+    expect(contenedor.querySelector('nav a[href="/administracion.html"]')).not.toBeNull();
+    await escribir("#admin-nombre", "Valorant");
+    await escribir("#admin-genero", "FPS");
+    await escribir("#admin-modalidad", "5v5");
+    await escribir("#admin-jugadoresPorEquipo", "5");
+    await boton("Guardar juego");
+    expect(contenedor.textContent).toContain("Juego guardado.");
+
+    await boton("Torneos");
+    await escribir("#admin-nombre", "Copa real");
+    await elegir("#admin-juegoId", "9");
+    await escribir("#admin-modalidad", "5v5");
+    await escribir("#admin-cupoMaximo", "8");
+    await escribir("#admin-fechaCierreInscripcion", "2099-12-01T12:00");
+    await escribir("#admin-fechaInicio", "2099-12-02T12:00");
+    await escribir("#admin-fechaFin", "2099-12-03T12:00");
+    await boton("Guardar torneo");
+    await boton("Abrir inscripciones");
+    expect(contenedor.textContent).toContain("Estado: ABIERTO");
+
+    await boton("Premios");
+    await elegir("#admin-torneo", "81");
+    await escribir("#admin-posicion", "1");
+    await escribir("#admin-descripcion", "Trofeo");
+    await boton("Guardar premio");
+    expect(contenedor.querySelector(".list-group").textContent).toContain("Trofeo");
+  });
+
   it("abre Acceso aunque falle la carga de datos de prueba", async () => {
     spyOn(arenaService, "cargar").and.rejectWith(new Error("fallo simulado"));
     await montar(<App />, "/acceso.html");

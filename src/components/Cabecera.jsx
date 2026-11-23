@@ -10,6 +10,9 @@ const enlaces = [
 ];
 export default function Cabecera({ sesion }) {
   const location = useLocation();
+  const visibles = sesion?.roles.includes("ADMINISTRADOR")
+    ? [...enlaces, ["administracion.html", "Administración"]]
+    : enlaces;
   return (
     <header className="encabezado">
       <div className="contenedor barra-navegacion">
@@ -22,7 +25,7 @@ export default function Cabecera({ sesion }) {
         </Link>
         <nav aria-label="Navegación principal">
           <ul className="menu">
-            {enlaces.map(([ruta, texto]) => (
+            {visibles.map(([ruta, texto]) => (
               <li key={ruta}>
                 <Link
                   to={"/" + ruta}
