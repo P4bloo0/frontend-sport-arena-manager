@@ -10,6 +10,8 @@ import Equipo from "./pages/Equipo.jsx";
 import PerfilCuenta from "./pages/PerfilCuenta.jsx";
 import RutaProtegida from "./components/RutaProtegida.jsx";
 import Acceso from "./pages/Acceso.jsx";
+import Organizacion from "./pages/Organizacion.jsx";
+import { rolesOrganizacion } from "./utils/roles.js";
 import Administracion from "./pages/Administracion.jsx";
 import { useSesion } from "./hooks/useSesion.js";
 export default function App() {
@@ -25,6 +27,7 @@ export default function App() {
       "/perfil.html": "Perfil",
       "/acceso.html": "Acceso",
       "/administracion.html": "Administración",
+      "/organizacion.html": "Organización",
     };
     document.title =
       "eSports Arena Manager | " + (nombres[ubicacion.pathname] ?? "Inicio");
@@ -81,6 +84,14 @@ export default function App() {
           element={
             <RutaProtegida sesion={sesion} roles={["ADMINISTRADOR"]}>
               {sesion && <Administracion key={sesion.userId ?? sesion.nickname} token={sesion.token} />}
+            </RutaProtegida>
+          }
+        />
+        <Route
+          path="/organizacion.html"
+          element={
+            <RutaProtegida sesion={sesion} roles={rolesOrganizacion}>
+              {sesion && <Organizacion key={sesion.userId ?? sesion.nickname} token={sesion.token} />}
             </RutaProtegida>
           }
         />

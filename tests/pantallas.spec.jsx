@@ -339,6 +339,96 @@ describe("pantallas de la evaluación", () => {
     expect(contenedor.querySelector(".list-group").textContent).toContain("Trofeo");
   });
 
+  it("bloquea el panel de Organización para un jugador", async () => {
+    const datos = { exp: Math.floor(Date.now() / 1000) + 120, sub: "jugador",
+      userId: 7, roles: ["JUGADOR"] };
+    const jwt = `cabecera.${btoa(JSON.stringify(datos)).replace(/=+$/, "")}.firma`;
+    localStorage.getItem.withArgs("arena_sesion").and.returnValue(jwt);
+    const fetchApi = spyOn(globalThis, "fetch");
+
+    await montar(<App />, "/organizacion.html");
+    expect(contenedor.textContent).toContain("Acceso restringido");
+    expect(contenedor.querySelector('nav a[href="/organizacion.html"]')).toBeNull();
+    expect(fetchApi).not.toHaveBeenCalled();
+  });
+
+  it("confirma inscripciones y registra y cierra sanciones como organizador", async () => {
+    const datos = { exp: Math.floor(Date.now() / 1000) + 120, sub: "organizador",
+      userId: 7, roles: ["ORGANIZADOR"] };
+    const jwt = `cabecera.${btoa(JSON.stringify(datos)).replace(/=+$/, "")}.firma`;
+    localStorage.getItem.withArgs("arena_sesion").and.returnValue(jwt);
+    spyOn(window, "confirm").and.returnValue(true);
+    const inscripcion = { inscripcionId: 21, torneoId: 2, equipoId: 31, estado: "PENDIENTE" };
+    let sancion;
+    spyOn(globalThis, "fetch").and.callFake(async (url, peticion) => {
+      const { pathname, search } = new URL(url);
+      const ruta = pathname.replace("/api/v1/", "") + search;
+      const { method, body, headers } = peticion;
+      if (ruta.startsWith("inscripciones") || ruta.startsWith("sanciones")) {
+        expect(headers.Authorization).toBe(`Bearer ${jwt}`);
+      }
+      const lecturas = {
+        equipos: [{ equipoId: 31, nombre: "Equipo real" }],
+        "usuarios/jugadores": [{ usuarioId: 19, nickname: "ArenaPlayer" }],
+        "inscripciones/torneo/2": [inscripcion],
+        sanciones: [],
+      };
+      let respuesta;
+      if (method === "GET" && Object.hasOwn(lecturas, ruta)) {
+        respuesta = lecturas[ruta];
+      } else if (method === "PUT" && ruta === "inscripciones/21/estado?nuevoEstado=CONFIRMADA") {
+        respuesta = { ...inscripcion, estado: "CONFIRMADA" };
+      } else if (method === "POST" && ruta === "sanciones") {
+        const solicitud = JSON.parse(body);
+        expect(solicitud).toEqual(jasmine.objectContaining({ usuarioId: 19, equipoId: null, severidad: "MEDIA" }));
+        sancion = { ...solicitud, sancionId: 42, estado: "ACTIVA" };
+        respuesta = sancion;
+      } else if (method === "PUT" && ruta === "sanciones/42") {
+        const solicitud = JSON.parse(body);
+        expect(solicitud.fechaInicio).toBe(sancion.fechaInicio);
+        expect(solicitud.motivo).toBe("Motivo actualizado");
+        sancion = { ...sancion, ...solicitud };
+        respuesta = sancion;
+      } else if (method === "DELETE" && ruta === "sanciones/42") {
+        respuesta = { ...sancion, estado: "CERRADA" };
+      } else {
+        throw new Error(`Petición inesperada: ${method} ${ruta}`);
+      }
+      return { ok: true, json: async () => respuesta };
+    });
+    const boton = async (texto) => act(async () => {
+      [...contenedor.querySelectorAll("button")].find((b) => b.textContent === texto).click();
+    });
+    const setMotivo = async (texto) => act(async () => {
+      const campo = contenedor.querySelector("#org-motivo");
+      campo.value = texto;
+      campo.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+
+    await montar(<App />, "/organizacion.html");
+    expect(contenedor.querySelector('nav a[href="/organizacion.html"]')).not.toBeNull();
+    expect(contenedor.querySelector('nav a[href="/administracion.html"]')).toBeNull();
+    await elegir("#org-torneo", "2");
+    expect(contenedor.querySelector("tbody").textContent).toContain("Equipo real");
+    await boton("Confirmar");
+    expect(contenedor.querySelector("tbody").textContent).toContain("CONFIRMADA");
+
+    await boton("Sanciones");
+    await elegir("#org-jugador", "19");
+    await escribir("#org-inicio", "2099-12-01T12:00");
+    await escribir("#org-fin", "2099-12-03T12:00");
+    await setMotivo("Conducta antideportiva");
+    await boton("Guardar sanción");
+    expect(contenedor.querySelector(".list-group").textContent).toContain("ArenaPlayer");
+    await boton("Editar");
+    expect(contenedor.querySelector("#org-inicio")).toBeNull();
+    await setMotivo("Motivo actualizado");
+    await boton("Guardar sanción");
+    expect(contenedor.querySelector(".list-group").textContent).toContain("Motivo actualizado");
+    await boton("Cerrar sanción");
+    expect(contenedor.querySelector(".list-group").textContent).toContain("CERRADA");
+  });
+
   it("abre Acceso aunque falle la carga de datos de prueba", async () => {
     spyOn(arenaService, "cargar").and.rejectWith(new Error("fallo simulado"));
     await montar(<App />, "/acceso.html");

@@ -1,4 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
+import { rolesOrganizacion } from "../utils/roles.js";
 const enlaces = [
   ["index.html", "Inicio"],
   ["torneos.html", "Torneos"],
@@ -10,9 +11,10 @@ const enlaces = [
 ];
 export default function Cabecera({ sesion }) {
   const location = useLocation();
-  const visibles = sesion?.roles.includes("ADMINISTRADOR")
-    ? [...enlaces, ["administracion.html", "Administración"]]
-    : enlaces;
+  const roles = sesion?.roles ?? [];
+  const visibles = [...enlaces];
+  if (roles.includes("ADMINISTRADOR")) visibles.push(["administracion.html", "Administración"]);
+  if (rolesOrganizacion.some((rol) => roles.includes(rol))) visibles.push(["organizacion.html", "Organización"]);
   return (
     <header className="encabezado">
       <div className="contenedor barra-navegacion">
