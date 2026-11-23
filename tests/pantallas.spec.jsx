@@ -429,6 +429,102 @@ describe("pantallas de la evaluación", () => {
     expect(contenedor.querySelector(".list-group").textContent).toContain("CERRADA");
   });
 
+  it("programa una partida con inscritos confirmados y publica solo resultados validados", async () => {
+    const datos = { exp: Math.floor(Date.now() / 1000) + 120, sub: "organizador",
+      userId: 7, roles: ["ORGANIZADOR"] };
+    const jwt = `cabecera.${btoa(JSON.stringify(datos)).replace(/=+$/, "")}.firma`;
+    localStorage.getItem.withArgs("arena_sesion").and.returnValue(jwt);
+    torneosApi.cargarCatalogo.and.resolveTo({ torneos: [
+      { id: 91, nombre: "Copa real", estado: "En curso", modalidad: "Individual" },
+    ] });
+    const inscripciones = [
+      { inscripcionId: 1, jugadorId: 11, estado: "CONFIRMADA" },
+      { inscripcionId: 2, jugadorId: 12, estado: "CONFIRMADA" },
+      { inscripcionId: 3, jugadorId: 13, estado: "PENDIENTE" },
+    ];
+    let partida, resultado;
+    spyOn(globalThis, "fetch").and.callFake(async (url, peticion) => {
+      const { pathname, search } = new URL(url);
+      const ruta = pathname.replace("/api/v1/", "") + search;
+      const { method, body, headers } = peticion;
+      if (method !== "GET") expect(headers.Authorization).toBe(`Bearer ${jwt}`);
+      const lecturas = {
+        equipos: [],
+        "usuarios/jugadores": [
+          { usuarioId: 11, nickname: "Local" }, { usuarioId: 12, nickname: "Visita" },
+        ],
+        "inscripciones/torneo/91": inscripciones,
+        "partidas/torneo/91": partida ? [partida] : [],
+        "resultados/torneo/91": resultado ? [resultado] : [],
+        "rankings/torneo/91": resultado?.estadoValidacion === "VALIDADO" ? [{
+          rankingId: 4, participanteId: 11, posicion: 1,
+          puntos: 3, victorias: 1, derrotas: 0, diferencia: 2,
+        }] : [],
+        "torneos/91/premios": [],
+      };
+      let respuesta;
+      if (method === "GET" && Object.hasOwn(lecturas, ruta)) {
+        respuesta = lecturas[ruta];
+      } else if (method === "POST" && ruta === "partidas") {
+        expect(JSON.parse(body)).toEqual({
+          torneoId: 91, participanteAId: 11, participanteBId: 12, ronda: "Final", fechaHora: null,
+        });
+        partida = { ...JSON.parse(body), partidaId: 71, estado: "PROGRAMADA" };
+        respuesta = partida;
+      } else if (method === "PATCH" && ruta === "partidas/71/estado?nuevo=EN_CURSO") {
+        partida = { ...partida, estado: "EN_CURSO" };
+        respuesta = partida;
+      } else if (method === "POST" && ruta === "resultados") {
+        expect(JSON.parse(body)).toEqual({ partidaId: 71, ganadorId: 11, puntajeA: 2, puntajeB: 0 });
+        resultado = { ...JSON.parse(body), resultadoId: 51, estadoValidacion: "PENDIENTE" };
+        respuesta = resultado;
+      } else if (method === "PATCH" && ruta === "resultados/51/validar") {
+        resultado = { ...resultado, estadoValidacion: "VALIDADO" };
+        respuesta = resultado;
+      } else if (method === "PATCH" && ruta === "resultados/51/anular") {
+        expect(JSON.parse(body)).toEqual({ justificacion: "Marcador incorrecto" });
+        resultado = { ...resultado, estadoValidacion: "ANULADO" };
+        respuesta = resultado;
+      } else {
+        throw new Error(`Petición inesperada: ${method} ${ruta}`);
+      }
+      return { ok: true, json: async () => respuesta };
+    });
+    const boton = async (texto) => act(async () => {
+      [...contenedor.querySelectorAll("button")].find((b) => b.textContent === texto).click();
+    });
+
+    await montar(<App />, "/organizacion.html");
+    await boton("Partidas y resultados");
+    await elegir("#part-torneo", "91");
+    expect([...contenedor.querySelector("#part-participanteAId").options].map((o) => o.value))
+      .toEqual(["", "11", "12"]);
+    await elegir("#part-participanteAId", "11");
+    await elegir("#part-participanteBId", "12");
+    await escribir("#part-ronda", "Final");
+    await boton("Guardar partida");
+    expect(contenedor.textContent).toContain("PROGRAMADA");
+    await boton("Iniciar partida");
+    await elegir("#part-ganadorId", "11");
+    await escribir("#part-puntajeA", "2");
+    await escribir("#part-puntajeB", "0");
+    await boton("Guardar resultado");
+    expect((await torneosApi.cargarDetalle(91)).resultados).toEqual([]);
+
+    await boton("Validar resultado");
+    const publicado = await torneosApi.cargarDetalle(91);
+    expect(publicado.resultados[0].puntajeLocal).toBe(2);
+    expect(publicado.ranking[0].nombre).toBe("Local");
+
+    await boton("Anular resultado");
+    await act(async () => {
+      contenedor.querySelector("#part-justificacion").value = "Marcador incorrecto";
+    });
+    await boton("Confirmar anulación");
+    expect(contenedor.textContent).toContain("ANULADO");
+    expect((await torneosApi.cargarDetalle(91)).resultados).toEqual([]);
+  });
+
   it("abre Acceso aunque falle la carga de datos de prueba", async () => {
     spyOn(arenaService, "cargar").and.rejectWith(new Error("fallo simulado"));
     await montar(<App />, "/acceso.html");

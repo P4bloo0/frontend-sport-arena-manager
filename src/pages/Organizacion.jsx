@@ -7,7 +7,9 @@ import { organizacionApi as api } from "../services/organizacionApi.js";
 import { equiposApi } from "../services/equiposApi.js";
 import { torneosApi } from "../services/torneosApi.js";
 
-const secciones = ["Inscripciones", "Sanciones"];
+import PartidasOrganizacion from "./PartidasOrganizacion.jsx";
+
+const secciones = ["Inscripciones", "Sanciones", "Partidas y resultados"];
 
 export default function Organizacion({ token }) {
   const [seccion, setSeccion] = useState("Inscripciones");
@@ -51,6 +53,9 @@ export default function Organizacion({ token }) {
           {op.mensaje && <p role="status">{op.mensaje}</p>}
           {seccion === "Inscripciones" && <Inscripciones datos={datos} token={token} op={op} />}
           {seccion === "Sanciones" && <Sanciones datos={datos} token={token} op={op} />}
+          {seccion === "Partidas y resultados" && (
+            <PartidasOrganizacion datos={datos} token={token} op={op} nombre={participante} />
+          )}
         </>
       )}
     </main>
