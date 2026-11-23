@@ -102,3 +102,60 @@
     grid-template-columns: 1fr;
   }
 }
+
+.contenedor.acceso {
+  width: calc(100% - 2rem);
+  max-width: 28rem;
+  margin: 3rem auto;
+  padding: clamp(1.25rem, 4vw, 2rem);
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-top: 3px solid var(--color-primario);
+  border-radius: 6px;
+  box-shadow: 0 12px 32px rgb(0 0 0 / 25%);
+}
+
+.contenedor.acceso-registro {
+  max-width: 36rem;
+}
+
+.acceso h1 {
+  margin: 0 0 1.25rem;
+  font-size: clamp(1.65rem, 4vw, 2rem);
+}
+
+.acceso form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.75rem 1rem;
+}
+
+.acceso-registro form {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.acceso form > .mensaje-error {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+.acceso .campo .mensaje-error:empty {
+  min-height: 0;
+  margin: 0;
+}
+
+.acceso .form-control,
+.acceso .btn {
+  min-height: 44px;
+  border-radius: 4px;
+}
+
+@media (max-width: 560px) {
+  .contenedor.acceso {
+    margin-block: 1.5rem;
+  }
+
+  .acceso-registro form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
