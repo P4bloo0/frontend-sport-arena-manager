@@ -218,19 +218,23 @@ describe("pantallas de la evaluación", () => {
       expect(contenedor.textContent).toContain(texto);
       expect(contenedor.querySelectorAll("main").length).toBe(1);
     });
-  it("carga la cuenta con el JWT y descarta el perfil al cerrar otra pestaña", async () => {
+  it("carga el perfil y sus notificaciones con el JWT y los oculta al salir", async () => {
     const datos = { exp: Math.floor(Date.now() / 1000) + 120, sub: "real",
       userId: 17, roles: ["JUGADOR"] };
     const jwt = `cabecera.${btoa(JSON.stringify(datos)).replace(/=+$/, "")}.firma`;
     const getItem = localStorage.getItem;
     getItem.withArgs("arena_sesion").and.returnValue(jwt);
     spyOn(arenaService, "cargar").and.rejectWith(new Error("demo no disponible"));
-    const fetchPerfil = spyOn(globalThis, "fetch").and.resolveTo({
-      ok: true,
-      json: async () => ({
+    const fetchPerfil = spyOn(globalThis, "fetch").and.callFake(async (url) => {
+      const contenido = url.endsWith("/notificaciones/me") ? [
+        { notificacionId: 1, mensaje: "Inscripción confirmada", fecha: "2026-11-20T12:00:00", estado: "ACTIVA" },
+        { notificacionId: 2, mensaje: "Ganaste un trofeo", fecha: "2026-11-22T12:00:00", estado: "ACTIVA" },
+        { notificacionId: 3, mensaje: "Aviso archivado", fecha: "2026-11-23T12:00:00", estado: "ARCHIVADA" },
+      ] : {
         usuarioId: 17, nombre: "Cuenta real", email: "real@example.com",
         nickname: "real", rol: "JUGADOR", estado: "ACTIVO",
-      }),
+      };
+      return { ok: true, json: async () => contenido };
     });
 
     await montar(<App />, "/perfil.html");
@@ -239,6 +243,10 @@ describe("pantallas de la evaluación", () => {
         headers: jasmine.objectContaining({ Authorization: `Bearer ${jwt}` }),
       }));
     expect(contenedor.textContent).toContain("real@example.com");
+    expect(fetchPerfil).toHaveBeenCalledWith(jasmine.stringMatching(/\/api\/v1\/notificaciones\/me$/),
+      jasmine.objectContaining({ headers: jasmine.objectContaining({ Authorization: `Bearer ${jwt}` }) }));
+    expect([...contenedor.querySelectorAll(".list-group-item p")].map((aviso) => aviso.textContent))
+      .toEqual(["Ganaste un trofeo", "Inscripción confirmada"]);
 
     await act(async () => {
       getItem.withArgs("arena_sesion").and.returnValue(null);
@@ -246,6 +254,7 @@ describe("pantallas de la evaluación", () => {
     });
     expect(contenedor.textContent).toContain("Iniciar sesión");
     expect(contenedor.textContent).not.toContain("real@example.com");
+    expect(contenedor.textContent).not.toContain("Ganaste un trofeo");
   });
 
   it("el guard bloquea un rol sin permiso y admite un rol autorizado", async () => {
@@ -279,7 +288,7 @@ describe("pantallas de la evaluación", () => {
     const jwt = `cabecera.${btoa(JSON.stringify(datos)).replace(/=+$/, "")}.firma`;
     localStorage.getItem.withArgs("arena_sesion").and.returnValue(jwt);
     const juego = { juegoId: 9, nombre: "Valorant", genero: "FPS", modalidad: "5v5", jugadoresPorEquipo: 5, estado: true };
-    const torneo = { torneoId: 81, nombre: "Copa real", juegoId: 9, estado: "BORRADOR" };
+    let torneo = { torneoId: 81, nombre: "Copa real", juegoId: 9, estado: "BORRADOR" };
     spyOn(globalThis, "fetch").and.callFake(async (url, peticion) => {
       const { pathname, search } = new URL(url);
       const ruta = pathname.replace("/api/v1/", "") + search;
@@ -295,9 +304,14 @@ describe("pantallas de la evaluación", () => {
         respuesta = juego;
       } else if (method === "POST" && ruta === "torneos") {
         expect(JSON.parse(body)).toEqual(jasmine.objectContaining({ juegoId: 9, cupoMaximo: 8 }));
-        respuesta = { ...JSON.parse(body), ...torneo };
+        torneo = { ...JSON.parse(body), ...torneo };
+        respuesta = torneo;
       } else if (method === "PUT" && ruta === "torneos/81/estado?nuevo=ABIERTO") {
-        respuesta = { ...torneo, estado: "ABIERTO" };
+        torneo = { ...torneo, estado: "ABIERTO" };
+        respuesta = torneo;
+      } else if (method === "PUT" && ruta === "torneos/81") {
+        expect(JSON.parse(body)).toEqual(jasmine.objectContaining({ nombre: "Copa editada", modalidad: "5v5" }));
+        respuesta = { ...torneo, ...JSON.parse(body) };
       } else if (method === "POST" && ruta === "torneos/81/premios") {
         expect(JSON.parse(body)).toEqual({ posicion: 1, descripcion: "Trofeo" });
         respuesta = JSON.parse(body);
@@ -330,6 +344,9 @@ describe("pantallas de la evaluación", () => {
     await boton("Guardar torneo");
     await boton("Abrir inscripciones");
     expect(contenedor.textContent).toContain("Estado: ABIERTO");
+    expect(contenedor.querySelector("#admin-modalidad").disabled).toBeTrue();
+    await escribir("#admin-nombre", "Copa editada");
+    await boton("Guardar torneo");
 
     await boton("Premios");
     await elegir("#admin-torneo", "81");
@@ -474,6 +491,9 @@ describe("pantallas de la evaluación", () => {
       } else if (method === "PATCH" && ruta === "partidas/71/estado?nuevo=EN_CURSO") {
         partida = { ...partida, estado: "EN_CURSO" };
         respuesta = partida;
+      } else if (method === "PATCH" && ruta === "partidas/71/estado?nuevo=FINALIZADA") {
+        partida = { ...partida, estado: "FINALIZADA" };
+        respuesta = partida;
       } else if (method === "POST" && ruta === "resultados") {
         expect(JSON.parse(body)).toEqual({ partidaId: 71, ganadorId: 11, puntajeA: 2, puntajeB: 0 });
         resultado = { ...JSON.parse(body), resultadoId: 51, estadoValidacion: "PENDIENTE" };
@@ -483,7 +503,11 @@ describe("pantallas de la evaluación", () => {
         respuesta = resultado;
       } else if (method === "PATCH" && ruta === "resultados/51/anular") {
         expect(JSON.parse(body)).toEqual({ justificacion: "Marcador incorrecto" });
-        resultado = { ...resultado, estadoValidacion: "ANULADO" };
+        resultado = { ...resultado, estadoValidacion: "ANULADO", justificacionAnulacion: "Marcador incorrecto" };
+        respuesta = resultado;
+      } else if (method === "PUT" && ruta === "resultados/51") {
+        expect(JSON.parse(body)).toEqual({ partidaId: 71, ganadorId: 11, puntajeA: 3, puntajeB: 0 });
+        resultado = { ...resultado, ...JSON.parse(body), estadoValidacion: "PENDIENTE", justificacionAnulacion: null };
         respuesta = resultado;
       } else {
         throw new Error(`Petición inesperada: ${method} ${ruta}`);
@@ -516,6 +540,7 @@ describe("pantallas de la evaluación", () => {
     expect(publicado.resultados[0].puntajeLocal).toBe(2);
     expect(publicado.ranking[0].nombre).toBe("Local");
 
+    await boton("Finalizar partida");
     await boton("Anular resultado");
     await act(async () => {
       contenedor.querySelector("#part-justificacion").value = "Marcador incorrecto";
@@ -523,6 +548,13 @@ describe("pantallas de la evaluación", () => {
     await boton("Confirmar anulación");
     expect(contenedor.textContent).toContain("ANULADO");
     expect((await torneosApi.cargarDetalle(91)).resultados).toEqual([]);
+
+    await escribir("#part-puntajeA", "3");
+    await boton("Guardar corrección");
+    expect(contenedor.textContent).toContain("PENDIENTE");
+    expect((await torneosApi.cargarDetalle(91)).resultados).toEqual([]);
+    await boton("Validar resultado");
+    expect((await torneosApi.cargarDetalle(91)).resultados[0].puntajeLocal).toBe(3);
   });
 
   it("abre Acceso aunque falle la carga de datos de prueba", async () => {

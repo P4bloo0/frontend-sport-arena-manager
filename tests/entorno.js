@@ -10,3 +10,7 @@ if (typeof globalThis.MessageChannel === "undefined") {
     }
   };
 }
+
+if (typeof globalThis.fetch === "undefined") {
+  globalThis.fetch = () => Promise.reject(new Error("Esta prueba requiere simular fetch."));
+}

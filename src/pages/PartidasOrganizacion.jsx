@@ -196,6 +196,7 @@ function ResultadoPartida({ partida, resultado, nombrar, token, op, alGuardar })
   const [anulando, setAnulando] = useState(false);
   const admiteResultado = ["EN_CURSO", "FINALIZADA"].includes(partida.estado);
   const pendiente = resultado?.estadoValidacion === "PENDIENTE";
+  const anulado = resultado?.estadoValidacion === "ANULADO";
   const ids = [partida.participanteAId, partida.participanteBId];
 
   function guardar(evento) {
@@ -230,8 +231,9 @@ function ResultadoPartida({ partida, resultado, nombrar, token, op, alGuardar })
         </>
       )}
       {!resultado && !admiteResultado && <p>Inicia la partida para registrar un resultado.</p>}
-      {admiteResultado && (!resultado || pendiente) && !anulando && (
-        <form className="formulario" onSubmit={guardar}>
+      {admiteResultado && (!resultado || pendiente || anulado) && !anulando && (
+        <form key={resultado?.estadoValidacion} className="formulario" onSubmit={guardar}>
+          {anulado && <p>Corrige el marcador y vuelve a validarlo para publicarlo.</p>}
           <SelectorParticipante campo="ganadorId" etiqueta="Ganador" ids={ids} nombrar={nombrar}
             valor={resultado?.ganadorId} />
           {ids.map((id, indice) => {
@@ -243,10 +245,12 @@ function ResultadoPartida({ partida, resultado, nombrar, token, op, alGuardar })
               </Campo>
             );
           })}
-          <button className="btn btn-primary" disabled={op.ocupado}>Guardar resultado</button>
+          <button className="btn btn-primary" disabled={op.ocupado}>
+            {anulado ? "Guardar corrección" : "Guardar resultado"}
+          </button>
         </form>
       )}
-      {resultado && resultado.estadoValidacion !== "ANULADO" && !anulando && (
+      {resultado && !anulado && !anulando && (
         <div className="acciones-filtros mt-3">
           {pendiente && admiteResultado && (
             <button type="button" className="btn btn-primary" disabled={op.ocupado}

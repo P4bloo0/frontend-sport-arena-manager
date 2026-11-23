@@ -166,6 +166,7 @@ function Torneos({ torneos, juegos, cambiar, token, op }) {
   const [seleccion, setSeleccion] = useState(null);
   const torneo = torneos.find((t) => t.torneoId === seleccion);
   const siguiente = transiciones[torneo?.estado];
+  const modalidadFija = torneo?.estado === "ABIERTO";
   const activos = juegos.filter((j) => j.estado);
 
   function guardar(evento) {
@@ -178,7 +179,7 @@ function Torneos({ torneos, juegos, cambiar, token, op }) {
       const nuevo = await api.guardarTorneo(torneo?.torneoId, {
         ...datos,
         nombre: datos.nombre.trim(),
-        modalidad: datos.modalidad.trim(),
+        modalidad: modalidadFija ? torneo.modalidad : datos.modalidad.trim(),
         juegoId: torneo?.juegoId ?? Number(datos.juegoId),
         cupoMaximo: Number(datos.cupoMaximo),
       }, token);
@@ -242,7 +243,11 @@ function Torneos({ torneos, juegos, cambiar, token, op }) {
               </select>
             </Campo>
             <Entrada nombre="modalidad" etiqueta="Modalidad" valor={torneo?.modalidad}
-              placeholder="Ej. Individual o 5 vs 5" />
+              placeholder="Ej. Individual o 5 vs 5" disabled={modalidadFija}
+              aria-describedby={modalidadFija ? "admin-modalidad-fija" : undefined} />
+            {modalidadFija && (
+              <p id="admin-modalidad-fija">La modalidad queda fija al abrir las inscripciones.</p>
+            )}
             <Entrada nombre="cupoMaximo" etiqueta="Cupo máximo" tipo="number" min={2} valor={torneo?.cupoMaximo} />
             <p>Fechas y horas de Santiago de Chile.</p>
             <Entrada nombre="fechaCierreInscripcion" etiqueta="Cierre de inscripción" tipo="datetime-local"
