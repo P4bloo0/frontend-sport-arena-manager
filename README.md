@@ -1,6 +1,6 @@
 # eSports Arena Manager
 
-Proyecto frontend para Desarrollo FullStack II, correspondiente a la Evaluación Parcial 2. Permite consultar torneos de videojuegos, gestionar equipos e inscribir participantes.
+Proyecto frontend de Desarrollo FullStack II. El listado de torneos y la pantalla de acceso ya consumen el backend de Arena. La integración de las demás pantallas está en curso.
 
 Está desarrollado con React y Vite. Bootstrap aporta la grilla, botones, tarjetas, tablas adaptables, controles, insignias de estado y avisos; `src/styles/bootstrap-tema.css` adapta sus variables a la paleta del proyecto. Mantiene la fuente Arial y la paleta Oro Competitivo del diseño original.
 
@@ -23,6 +23,14 @@ npm run dev
 
 Abre el localhost que indique la terminal, normalmente `http://localhost:5173`. Para detener la página, presiona Ctrl + C en la terminal.
 
+## Probar el acceso real
+
+1. Enciende el backend de Arena y comprueba que el Gateway responda en `http://localhost:8080/api/v1/torneos`.
+2. Abre `http://localhost:5173/acceso.html` y pulsa **Registrarme** o entra con una cuenta existente.
+3. Recarga la página y comprueba que sigue abierta **Mi sesión**. Abre Acceso en otra pestaña, cierra sesión en la primera y comprueba que la segunda también vuelve al formulario.
+
+El frontend usa `http://localhost:8080` por defecto. Si tu Gateway tiene otra dirección, copia `.env.example` a `.env.local`, cambia `VITE_API_URL` y reinicia Vite. Si cambia el origen del frontend, agrégalo a `CORS_ORIGINS` del Gateway.
+
 ## Funciones
 
 - Inicio con torneos destacados, próximos cierres y video.
@@ -32,9 +40,9 @@ Abre el localhost que indique la terminal, normalmente `http://localhost:5173`. 
 - Creación y edición de equipos, capitán e integrantes.
 - Perfil de prueba con datos del jugador e historial.
 
-Los juegos disponibles son League of Legends, Valorant, Minecraft y Fortnite. Los datos se guardan en el navegador mediante localStorage. No hay backend ni inicio de sesión real; el selector de perfiles permite probar distintos casos.
+**Acceso** registra cuentas e inicia sesión con el backend. El navegador guarda el JWT para mantener la sesión al recargar. **Torneos** consulta el catálogo real. Inicio, Detalle, Equipos, Inscripción y Perfil todavía usan la demostración del navegador, con su selector **Perfil de prueba**.
 
-## Probar una inscripción
+## Probar una inscripción de demostración
 
 Las fechas originales son de septiembre de 2026. Para probar el formulario después de esas fechas:
 
@@ -51,7 +59,8 @@ Las fechas originales son de septiembre de 2026. Para probar el formulario despu
 src/components/   menú, tarjetas, formularios y tablas
 src/pages/        pantallas de la aplicación
 src/data/         datos de ejemplo
-src/services/     carga y guardado local
+src/services/     acceso a la API y almacenamiento de la demostración
+src/hooks/        gestión de la sesión
 src/utils/        validaciones y cálculos
 src/styles/       estilos y distribución
 public/           imágenes y video
