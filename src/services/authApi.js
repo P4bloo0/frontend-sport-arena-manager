@@ -24,9 +24,10 @@ async function enviar(ruta, { datos, token, signal } = {}) {
   const contenido = await respuesta.json().catch(() => null);
 
   if (!respuesta.ok) {
-    const mensaje = respuesta.status === 401
-      ? "Las credenciales son incorrectas o tu sesión venció."
-      : contenido?.mensaje || `La solicitud falló (${respuesta.status}).`;
+    let mensaje = contenido?.mensaje || `La solicitud falló (${respuesta.status}).`;
+    if (respuesta.status === 401) {
+      mensaje = token ? "Tu sesión venció." : "El apodo o la contraseña no son correctos.";
+    }
 
     const error = new Error(mensaje);
     error.estado = respuesta.status;
