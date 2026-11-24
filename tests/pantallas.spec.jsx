@@ -566,6 +566,32 @@ describe("pantallas de la evaluación", () => {
     expect(document.title).toBe("eSports Arena Manager | Acceso");
   });
 
+  it("muestra y oculta la contraseña sin borrarla ni enviar el formulario", async () => {
+    const ingresar = spyOn(authApi, "ingresar");
+    await montar(<App />, "/acceso.html");
+    const contrasena = () => contenedor.querySelector("#acceso-password");
+    const ver = 'button[aria-label="Mostrar contraseña"]';
+    const ocultar = 'button[aria-label="Ocultar contraseña"]';
+
+    await escribir("#acceso-nickname", "jugador-prueba");
+    await escribir("#acceso-password", "clave123");
+    expect(contrasena().type).toBe("password");
+    await pulsar(ver);
+    expect(contrasena().type).toBe("text");
+    expect(contrasena().value).toBe("clave123");
+    await pulsar(ocultar);
+    expect(contrasena().type).toBe("password");
+    expect(contrasena().value).toBe("clave123");
+    expect(ingresar).not.toHaveBeenCalled();
+
+    await pulsar(ver);
+    await pulsar('form > button[type="button"]');
+    expect(contrasena().type).toBe("password");
+    expect(contrasena().autocomplete).toBe("new-password");
+    await pulsar(ver);
+    expect(contrasena().type).toBe("text");
+  });
+
   for (const formato of ["actual", "anterior"]) {
     it(`marca el correo repetido en Registro con la respuesta ${formato}`, async () => {
       const correo = "ya-registrado@example.test";
@@ -580,7 +606,7 @@ describe("pantallas de la evaluación", () => {
       });
 
       await montar(<App />, "/acceso.html");
-      await pulsar('form button[type="button"]');
+      await pulsar('form > button[type="button"]');
       await escribir("#acceso-nombre", "Persona de prueba");
       await escribir("#acceso-email", correo);
       await escribir("#acceso-nickname", "jugador-prueba");
@@ -596,7 +622,7 @@ describe("pantallas de la evaluación", () => {
       await escribir("#acceso-email", "otro@example.test");
       expect(contenedor.querySelector("#acceso-email").getAttribute("aria-invalid")).toBe("false");
       expect(contenedor.querySelector("#acceso-nombre").value).toBe("Persona de prueba");
-      await pulsar('form button[type="button"]');
+      await pulsar('form > button[type="button"]');
       expect(contenedor.querySelector("h1").textContent).toBe("Iniciar sesión");
     });
   }

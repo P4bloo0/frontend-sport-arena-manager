@@ -150,6 +150,69 @@
   border-radius: 4px;
 }
 
+.acceso-contrasena {
+  display: flex;
+}
+
+.acceso .acceso-contrasena .form-control {
+  min-width: 0;
+  border-radius: 4px 0 0 4px;
+}
+
+.acceso-contrasena input::-ms-reveal {
+  display: none;
+}
+
+.acceso-ver-contrasena {
+  display: grid;
+  place-items: center;
+  flex: 0 0 44px;
+  border: 1px solid var(--color-borde);
+  border-left: 0;
+  border-radius: 0 4px 4px 0;
+  color: var(--color-texto);
+  background: var(--color-fondo);
+}
+
+.acceso-ver-contrasena:hover {
+  color: var(--color-primario);
+}
+
+.acceso-ver-contrasena:focus-visible {
+  outline: 3px solid var(--color-acento);
+  outline-offset: 2px;
+}
+
+.acceso-ojo {
+  position: relative;
+  width: 0.9rem;
+  height: 0.9rem;
+  border: 2px solid currentColor;
+  border-radius: 70% 0;
+  transform: rotate(45deg);
+}
+
+.acceso-ojo::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 0.3rem;
+  height: 0.3rem;
+  margin: auto;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.acceso-ojo[data-visible="true"]::after {
+  content: "";
+  position: absolute;
+  inset: -0.25rem auto -0.25rem 50%;
+  width: 2px;
+  transform: translateX(-50%);
+  background: currentColor;
+  box-shadow: 0 0 0 1px var(--color-fondo);
+}
+
 @media (max-width: 560px) {
   .contenedor.acceso {
     margin-block: 1.5rem;

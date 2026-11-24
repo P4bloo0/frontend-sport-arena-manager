@@ -4,6 +4,27 @@ import Campo from "../components/Campo.jsx";
 import { authApi } from "../services/authApi.js";
 import { correoValido } from "../utils/logica.js";
 
+function EntradaContrasena(atributos) {
+  const [visible, setVisible] = useState(false);
+  const accion = visible ? "Ocultar contraseña" : "Mostrar contraseña";
+
+  return (
+    <div className="acceso-contrasena">
+      <input {...atributos} type={visible ? "text" : "password"} />
+      <button
+        type="button"
+        className="acceso-ver-contrasena"
+        aria-label={accion}
+        aria-controls={atributos.id}
+        title={accion}
+        onClick={() => setVisible((actual) => !actual)}
+      >
+        <span className="acceso-ojo" data-visible={visible} aria-hidden="true" />
+      </button>
+    </div>
+  );
+}
+
 export default function Acceso({ sesion, avisoSesion, iniciarSesion, cerrarSesion }) {
   const { state } = useLocation();
   const navegar = useNavigate();
@@ -68,22 +89,24 @@ export default function Acceso({ sesion, avisoSesion, iniciarSesion, cerrarSesio
 
   function campo(nombre, etiqueta, tipo, autocompletar) {
     const id = `acceso-${nombre}`;
+    const atributos = {
+      className: errores[nombre] ? "form-control is-invalid" : "form-control",
+      id,
+      name: nombre,
+      autoComplete: autocompletar,
+      "aria-invalid": Boolean(errores[nombre]),
+      "aria-describedby": `${id}-error`,
+      onChange: () => {
+        if (errores[nombre]) setErrores((actuales) => ({ ...actuales, [nombre]: "" }));
+      },
+      required: true,
+    };
 
     return (
       <Campo id={id} etiqueta={etiqueta} error={errores[nombre]}>
-        <input
-          className={errores[nombre] ? "form-control is-invalid" : "form-control"}
-          id={id}
-          name={nombre}
-          type={tipo}
-          autoComplete={autocompletar}
-          aria-invalid={Boolean(errores[nombre])}
-          aria-describedby={`${id}-error`}
-          onChange={() => {
-            if (errores[nombre]) setErrores((actuales) => ({ ...actuales, [nombre]: "" }));
-          }}
-          required
-        />
+        {tipo === "password"
+          ? <EntradaContrasena {...atributos} />
+          : <input {...atributos} type={tipo} />}
       </Campo>
     );
   }
