@@ -701,6 +701,42 @@ describe("pantallas de la evaluación", () => {
     await montar(<App />, "/detalle-torneo.html?id=999");
     expect(contenedor.textContent).toContain("El torneo no existe");
   });
+  it("avisa que el catálogo de inscripción está vacío y ofrece volver a Torneos", async () => {
+    torneosApi.cargarCatalogo.and.resolveTo({ torneos: [], juegos: [] });
+    await montar(<Inscripcion sesion={{ userId: 17, nickname: "jugador" }} />, "/inscripcion.html");
+
+    expect(contenedor.querySelector("#ins-torneo")).toBeNull();
+    expect(contenedor.textContent).toContain("No hay torneos disponibles para inscribirte.");
+    expect(contenedor.querySelector('main a[href="/torneos.html"]')).not.toBeNull();
+  });
+
+  it("solo ofrece torneos en los que todavía se puede inscribir", async () => {
+    const abierto = {
+      id: 21, nombre: "Copa abierta", estado: "Abierto", modalidad: "Individual",
+      cupoActual: 1, cupoMaximo: 2, fechaCierre: "2099-12-31T12:00:00", cierre: "2099-12-31",
+    };
+    torneosApi.cargarCatalogo.and.resolveTo({ juegos: [], torneos: [
+      abierto,
+      { ...abierto, id: 22, cupoActual: 2 },
+      { ...abierto, id: 23, fechaCierre: "2000-01-01T12:00:00" },
+      { ...abierto, id: 24, estado: "En curso" },
+    ] });
+    await montar(<Inscripcion sesion={{ userId: 17, nickname: "jugador" }} />, "/inscripcion.html");
+
+    expect(Array.from(contenedor.querySelector("#ins-torneo").options, ({ value }) => value))
+      .toEqual(["", "21"]);
+    await elegir("#ins-torneo", "21");
+    expect(contenedor.querySelector(".formulario button").disabled).toBeFalse();
+  });
+
+  it("oculta el selector de detalle cuando todavía no hay torneos", async () => {
+    torneosApi.cargarCatalogo.and.resolveTo({ torneos: [], juegos: [] });
+    await montar(<App />, "/detalle-torneo.html");
+
+    expect(contenedor.querySelector("#selector-torneo")).toBeNull();
+    expect(contenedor.textContent).toContain("No hay torneos disponibles.");
+  });
+
   it("inscribe solo un equipo elegible y refresca los cupos", async () => {
     const torneo = { ...db.torneos[1], juegoId: 9, cupoMaximo: 16, cupoActual: 2 };
     const sesion = { token: "token", userId: 17, nickname: "Capitana", roles: ["JUGADOR"] };

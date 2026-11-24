@@ -6,13 +6,7 @@ import { Ficha } from "../components/Tablas.jsx";
 import { useCatalogoTorneos } from "../hooks/useCatalogoTorneos.js";
 import { equiposApi } from "../services/equiposApi.js";
 import { inscripcionesApi } from "../services/inscripcionesApi.js";
-import { esTorneoIndividual, formatearFecha } from "../utils/logica.js";
-
-function plazoVencido(torneo) {
-  // El backend envía la hora de Santiago sin offset.
-  const ahora = new Date().toLocaleString("sv-SE", { timeZone: "America/Santiago" });
-  return Boolean(torneo.fechaCierre && ahora.replace(" ", "T") > torneo.fechaCierre);
-}
+import { esTorneoIndividual, formatearFecha, motivoCierreInscripcion } from "../utils/logica.js";
 
 export default function Inscripcion({ sesion }) {
   const [busqueda, setBusqueda] = useSearchParams();
@@ -27,6 +21,8 @@ export default function Inscripcion({ sesion }) {
   const [ocupacion, setOcupacion] = useState({});
   const { token, userId, nickname } = sesion;
   const torneo = catalogo?.torneos.find((t) => t.id === Number(busqueda.get("id")));
+  const opciones = catalogo?.torneos.filter((t) =>
+    t.id === torneo?.id || !motivoCierreInscripcion(t, ocupacion[t.id]));
   const individual = esTorneoIndividual(torneo);
   const elegibles = equipos?.filter((e) =>
     e.estado && e.capitanId === userId && e.juegoPrincipalId === torneo?.juegoId);
@@ -53,12 +49,13 @@ export default function Inscripcion({ sesion }) {
   }, [token, torneo, individual]);
 
   function bloqueo() {
-    if (!torneo) return "Selecciona un torneo.";
+    if (!torneo) return busqueda.has("id")
+      ? "El torneo no existe. Selecciona otro torneo."
+      : "Selecciona un torneo.";
     if (!userId) return "Tu cuenta debe estar vinculada a un perfil.";
     if (registrados.includes(clave)) return "Este participante ya está inscrito en el torneo.";
-    if (torneo.estado !== "Abierto") return "El torneo no está abierto para inscripciones.";
-    if (plazoVencido(torneo)) return "El plazo de inscripción terminó.";
-    if (!disponibles) return "El torneo no tiene cupos disponibles.";
+    const motivoCierre = motivoCierreInscripcion(torneo, ocupados);
+    if (motivoCierre) return motivoCierre;
     if (individual) return "";
     if (errorEquipos) return errorEquipos;
     if (!elegibles) return "Cargando tus equipos.";
@@ -111,7 +108,13 @@ export default function Inscripcion({ sesion }) {
       </section>
       {errorCatalogo && <p role="alert">{errorCatalogo}</p>}
       {!catalogo && !errorCatalogo && <p role="status">Cargando torneos.</p>}
-      {catalogo && (
+      {opciones?.length === 0 && (
+        <div className="alert alert-info aviso-vacio">
+          <p role="status">No hay torneos disponibles para inscribirte.</p>
+          <Link className="btn btn-outline-light" to="/torneos.html">Ver torneos</Link>
+        </div>
+      )}
+      {opciones?.length > 0 && (
         <DosColumnas>
           <section className="panel-filtros">
             <h2>Datos de la inscripción</h2>
@@ -124,7 +127,7 @@ export default function Inscripcion({ sesion }) {
                     cambiarSeleccion();
                   }}>
                   <option value="" disabled>Selecciona un torneo</option>
-                  {catalogo.torneos.map((t) => (
+                  {opciones.map((t) => (
                     <option key={t.id} value={t.id}>{t.nombre}</option>
                   ))}
                 </select>

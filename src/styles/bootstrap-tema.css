@@ -71,7 +71,20 @@
   border-color: var(--color-borde);
 }
 .form-select {
+  color-scheme: dark;
   --bs-form-select-bg-img: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23f0e6d2' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+}
+.form-select option,
+.form-select optgroup {
+  color: var(--color-texto);
+  background-color: var(--color-superficie);
+}
+.form-select:disabled {
+  color: var(--color-texto-suave);
+  background-color: var(--color-superficie);
+}
+.form-select option:disabled {
+  color: var(--color-texto-suave);
 }
 .campo .form-select, .selector-rol .form-select {
   padding-right: 2.25rem;

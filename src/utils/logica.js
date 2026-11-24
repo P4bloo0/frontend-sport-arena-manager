@@ -32,6 +32,14 @@ export function inscripcionFueraDePlazo(torneo, fecha = hoy()) {
   return Boolean(torneo && fecha > torneo.cierre);
 }
 
+export function motivoCierreInscripcion(torneo, ocupados = torneo.cupoActual) {
+  if (torneo.estado !== "Abierto") return "El torneo no está abierto para inscripciones.";
+  const ahora = new Date().toLocaleString("sv-SE", { timeZone: "America/Santiago" }).replace(" ", "T");
+  if (torneo.fechaCierre && ahora > torneo.fechaCierre) return "El plazo de inscripción terminó.";
+  if (ocupados >= torneo.cupoMaximo) return "El torneo no tiene cupos disponibles.";
+  return "";
+}
+
 // el número de un equipo puede repetirse en un jugador, por eso miramos el tipo
 export function tieneSancionActiva(sanciones, tipo, id, fecha = hoy()) {
   return sanciones.some(

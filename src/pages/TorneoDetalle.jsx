@@ -5,7 +5,7 @@ import { Estado } from "../components/TarjetaTorneo.jsx";
 import { Ficha, LlaveTorneo, TablaRanking } from "../components/Tablas.jsx";
 import { useCatalogoTorneos } from "../hooks/useCatalogoTorneos.js";
 import { torneosApi } from "../services/torneosApi.js";
-import { formatearFecha } from "../utils/logica.js";
+import { formatearFecha, motivoCierreInscripcion } from "../utils/logica.js";
 
 export default function TorneoDetalle() {
   const [busqueda, setBusqueda] = useSearchParams();
@@ -27,20 +27,21 @@ export default function TorneoDetalle() {
       {!catalogo && !error && <p role="status">Cargando torneos.</p>}
       {catalogo && (
         <>
-          <div className="campo selector-detalle">
-            <label htmlFor="selector-torneo">Ver torneo</label>
-            <select className="form-select"
-              id="selector-torneo"
-              value={torneo ? id : ""}
-              onChange={(e) => setBusqueda({ id: e.target.value })}
-              disabled={!torneos.length}
-            >
-              <option value="" disabled>Selecciona un torneo</option>
-              {torneos.map((t) => (
-                <option value={t.id} key={t.id}>{t.nombre}</option>
-              ))}
-            </select>
-          </div>
+          {torneos.length > 0 && (
+            <div className="campo selector-detalle">
+              <label htmlFor="selector-torneo">Ver torneo</label>
+              <select className="form-select"
+                id="selector-torneo"
+                value={torneo ? id : ""}
+                onChange={(e) => setBusqueda({ id: e.target.value })}
+              >
+                <option value="" disabled>Selecciona un torneo</option>
+                {torneos.map((t) => (
+                  <option value={t.id} key={t.id}>{t.nombre}</option>
+                ))}
+              </select>
+            </div>
+          )}
           {torneo ? (
             <FichaTorneo key={id} torneo={torneo} />
           ) : (
@@ -58,6 +59,7 @@ function FichaTorneo({ torneo }) {
   const [detalle, setDetalle] = useState(null);
   const [error, setError] = useState("");
   const { id, cupoActual, cupoMaximo } = torneo;
+  const motivoCierre = motivoCierreInscripcion(torneo);
 
   useEffect(() => {
     const control = new AbortController();
@@ -77,12 +79,13 @@ function FichaTorneo({ torneo }) {
       <div className="detalle-encabezado">
         <h2>{torneo.nombre}</h2>
         <Estado estado={torneo.estado} />
-        {torneo.estado === "Abierto" && (
+        {!motivoCierre && (
           <Link className="btn btn-primary boton boton-primario" to={`/inscripcion.html?id=${id}`}>
             Inscribirme
           </Link>
         )}
       </div>
+      {torneo.estado === "Abierto" && motivoCierre && <p>{motivoCierre}</p>}
       <Ficha
         filas={[
           ["Juego", torneo.juego],
