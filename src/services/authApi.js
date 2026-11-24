@@ -20,6 +20,16 @@ async function registrar(datos) {
 
 export const authApi = {
   registrar,
+  async ingresarDemo(apodo) {
+    const respuesta = await fetch("/__arena/acceso-demo", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ apodo }),
+    });
+    const cuerpo = await respuesta.json().catch(() => null);
+    if (!respuesta.ok) throw new Error(cuerpo?.mensaje ?? "El acceso rápido no está disponible.");
+    return cuerpo;
+  },
   ingresar: (datos) => enviar("login", {
     datos,
     mensaje401: "El apodo o la contraseña no son correctos.",

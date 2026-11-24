@@ -1,14 +1,16 @@
 // montamos la pantalla y probamos lo mismo que haría una persona
 import React, { act, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
 import App from "../src/App.jsx";
+import Acceso from "../src/pages/Acceso.jsx";
 import Inscripcion from "../src/pages/Inscripcion.jsx";
 import { authApi } from "../src/services/authApi.js";
 import RutaProtegida from "../src/components/RutaProtegida.jsx";
 import TarjetaTorneo from "../src/components/TarjetaTorneo.jsx";
 import { TablaRanking, LlaveTorneo } from "../src/components/Tablas.jsx";
 import FormularioInscripcion from "../src/components/FormularioInscripcion.jsx";
+import PerfilesPredefinidos from "../src/components/PerfilesPredefinidos.jsx";
 import Equipo from "../src/pages/Equipo.jsx";
 import Perfil from "../src/pages/Perfil.jsx";
 import { arenaService } from "../src/services/arenaService.js";
@@ -889,11 +891,17 @@ describe("pantallas de la evaluación", () => {
     await montar(<App />, "/inventada");
     expect(contenedor.textContent).toContain("Página no encontrada");
   });
-  it("muestra cuatro accesos rápidos y solicita la contraseña de la cuenta seleccionada", async () => {
+  it("completa el apodo en el formulario cuando el acceso directo está desactivado", async () => {
     const ingresar = spyOn(authApi, "ingresar");
-    await montar(<App />);
-    expect(contenedor.querySelector("#selector-perfil")).toBeNull();
-    expect(contenedor.querySelector("footer button")).toBeNull();
+    await montar(
+      <>
+        <PerfilesPredefinidos accesoDirecto={false} />
+        <Routes>
+          <Route path="/index.html" element={<h1>Inicio</h1>} />
+          <Route path="/acceso.html" element={<Acceso />} />
+        </Routes>
+      </>,
+    );
 
     await pulsar(".perfiles-predefinidos summary");
     const perfiles = contenedor.querySelectorAll(".perfiles-predefinidos a");
@@ -905,6 +913,23 @@ describe("pantallas de la evaluación", () => {
     expect(contenedor.querySelector("#acceso-nickname").value).toBe("camila");
     expect(document.activeElement.id).toBe("acceso-password");
     expect(ingresar).not.toHaveBeenCalled();
+  });
+
+  it("usa el JWT del acceso directo y abre el panel del perfil elegido", async () => {
+    const iniciarSesion = jasmine.createSpy("iniciarSesion");
+    const demo = spyOn(authApi, "ingresarDemo").and.resolveTo({ token: "jwt-de-prueba" });
+    await montar(
+      <>
+        <PerfilesPredefinidos accesoDirecto iniciarSesion={iniciarSesion} />
+        <Routes><Route path="/administracion.html" element={<h1>Panel de prueba</h1>} /></Routes>
+      </>,
+    );
+
+    await pulsar(".perfiles-predefinidos summary");
+    await pulsar(".perfiles-predefinidos button");
+    expect(demo).toHaveBeenCalledOnceWith("admin");
+    expect(iniciarSesion).toHaveBeenCalledOnceWith("jwt-de-prueba");
+    expect(contenedor.querySelector("h1").textContent).toBe("Panel de prueba");
   });
 
   it("permite al administrador desactivar un equipo ajeno", async () => {

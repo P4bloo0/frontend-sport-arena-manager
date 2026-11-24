@@ -35,7 +35,7 @@ El frontend usa el Gateway en `http://localhost:8080`. Para cambiarlo, copia `.e
 
 El registro público crea cuentas de jugador. Para preparar cuentas privilegiadas, consulta [la guía de integración](docs/INTEGRACION_EP3.md).
 
-**Accesos rápidos** en la esquina inferior derecha completa el apodo de Admin, Leo, Camila o Felipe. Ingresa la contraseña de la cuenta para iniciar sesión. El backend incluye el comando `node tools/preparar-perfiles-demo.mjs` para crear esas cuentas y guardar sus claves fuera del repositorio.
+**Accesos rápidos** en la esquina inferior derecha permite entrar como Admin, Leo, Camila o Felipe. Si ejecutas `npm run dev` en `localhost`, Vite inicia sesión con el backend local usando las claves que prepara `node tools/preparar-perfiles-demo.mjs` desde el repositorio del backend. Las claves se leen desde el archivo local y el navegador recibe el JWT. En la versión compilada, el recuadro abre el formulario con el apodo seleccionado y solicita la contraseña.
 
 ## Pruebas
 

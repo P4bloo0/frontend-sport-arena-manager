@@ -108,7 +108,7 @@ export default function App() {
         />
       </Routes>
       <PiePagina />
-      {!sesion && <PerfilesPredefinidos />}
+      {!sesion && <PerfilesPredefinidos iniciarSesion={iniciarSesion} />}
     </>
   );
 }
