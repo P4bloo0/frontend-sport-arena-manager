@@ -565,6 +565,41 @@ describe("pantallas de la evaluación", () => {
     expect(contenedor.querySelector("#acceso-nickname")).not.toBeNull();
     expect(document.title).toBe("eSports Arena Manager | Acceso");
   });
+
+  for (const formato of ["actual", "anterior"]) {
+    it(`marca el correo repetido en Registro con la respuesta ${formato}`, async () => {
+      const correo = "ya-registrado@example.test";
+      const aviso = "Este correo ya está registrado. Inicia sesión o usa otro correo.";
+      const contenido = formato === "actual"
+        ? { mensaje: "Revisa los datos del formulario.", errores: { email: aviso } }
+        : { mensaje: `el email '${correo}' ya esta registrado` };
+      const registro = spyOn(globalThis, "fetch").and.resolveTo({
+        ok: false,
+        status: formato === "actual" ? 409 : 400,
+        json: async () => contenido,
+      });
+
+      await montar(<App />, "/acceso.html");
+      await pulsar('form button[type="button"]');
+      await escribir("#acceso-nombre", "Persona de prueba");
+      await escribir("#acceso-email", correo);
+      await escribir("#acceso-nickname", "jugador-prueba");
+      await escribir("#acceso-password", "clave123");
+      await pulsar('form button[type="submit"]');
+
+      expect(registro).toHaveBeenCalledWith(jasmine.stringMatching(/\/api\/v1\/auth\/register$/),
+        jasmine.objectContaining({ method: "POST" }));
+      expect(contenedor.querySelector("#acceso-email").getAttribute("aria-invalid")).toBe("true");
+      expect(contenedor.querySelector("#acceso-email-error").textContent).toBe(aviso);
+      expect(contenedor.textContent).not.toContain(correo);
+
+      await escribir("#acceso-email", "otro@example.test");
+      expect(contenedor.querySelector("#acceso-email").getAttribute("aria-invalid")).toBe("false");
+      expect(contenedor.querySelector("#acceso-nombre").value).toBe("Persona de prueba");
+      await pulsar('form button[type="button"]');
+      expect(contenedor.querySelector("h1").textContent).toBe("Iniciar sesión");
+    });
+  }
   it("inicio conserva la imagen original con descripción y el video local", async () => {
     spyOn(arenaService, "cargar").and.resolveTo(db);
     await montar(<App />);

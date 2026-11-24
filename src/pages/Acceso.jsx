@@ -55,8 +55,12 @@ export default function Acceso({ sesion, avisoSesion, iniciarSesion, cerrarSesio
         navegar(vuelta, { replace: true });
       }
     } catch (error) {
-      setMensaje(error.message);
-      setErrores(error.campos ?? {});
+      const camposVisibles = registro ? ["nombre", "email", "nickname", "password"] : ["nickname", "password"];
+      const fallosServidor = Object.fromEntries(
+        camposVisibles.filter((campo) => error.campos?.[campo]).map((campo) => [campo, error.campos[campo]]),
+      );
+      setErrores(fallosServidor);
+      setMensaje(Object.keys(fallosServidor).length ? "" : error.message);
     } finally {
       setEnviando(false);
     }
@@ -68,13 +72,16 @@ export default function Acceso({ sesion, avisoSesion, iniciarSesion, cerrarSesio
     return (
       <Campo id={id} etiqueta={etiqueta} error={errores[nombre]}>
         <input
-          className="form-control"
+          className={errores[nombre] ? "form-control is-invalid" : "form-control"}
           id={id}
           name={nombre}
           type={tipo}
           autoComplete={autocompletar}
           aria-invalid={Boolean(errores[nombre])}
           aria-describedby={`${id}-error`}
+          onChange={() => {
+            if (errores[nombre]) setErrores((actuales) => ({ ...actuales, [nombre]: "" }));
+          }}
           required
         />
       </Campo>
