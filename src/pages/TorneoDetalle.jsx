@@ -104,11 +104,12 @@ function FichaTorneo({ torneo }) {
 }
 
 function Competencia({ detalle, finalizado }) {
+  const errores = detalle.errores ?? {};
   return (
     <>
       <section>
         <h3>Participantes inscritos</h3>
-        {!detalle.inscritos.length ? (
+        {errores.inscritos ? <p role="alert">No se pudieron cargar los participantes inscritos.</p> : !detalle.inscritos.length ? (
           <p className="alert alert-info aviso-vacio">
             Todavía no hay participantes inscritos.
           </p>
@@ -137,10 +138,16 @@ function Competencia({ detalle, finalizado }) {
           </div>
         )}
       </section>
-      <DetallePartidas partidas={detalle.partidas} db={detalle} />
+      {errores.resultados && <p role="alert">No se pudieron cargar los resultados de las partidas.</p>}
+      {errores.partidas ? (
+        <section>
+          <h3>Calendario de partidas</h3>
+          <p role="alert">No se pudieron cargar las partidas.</p>
+        </section>
+      ) : <DetallePartidas partidas={detalle.partidas} db={detalle} />}
       <section>
         <h3>Tabla de posiciones</h3>
-        <TablaRanking filas={detalle.ranking} />
+        {errores.ranking ? <p role="alert">No se pudo cargar la tabla de posiciones.</p> : <TablaRanking filas={detalle.ranking} />}
       </section>
       <section>
         <h3>Premios</h3>
@@ -149,11 +156,15 @@ function Competencia({ detalle, finalizado }) {
             Los premios por posición se publican al finalizar el torneo.
           </p>
         )}
-        {finalizado && !detalle.premios.length && <p>No hay premios publicados.</p>}
+        {finalizado && errores.premios && <p role="alert">No se pudieron cargar los premios.</p>}
+        {finalizado && !errores.premios && !detalle.premios.length && <p>No hay premios publicados.</p>}
         {finalizado && detalle.premios.length > 0 && (
           <ul>
             {detalle.premios.map((premio) => (
-              <li key={premio.posicion}>{premio.posicion}º lugar: {premio.descripcion}</li>
+              <li key={premio.posicion}>
+                {premio.posicion}º lugar: {premio.descripcion}
+                {premio.ganador && <> · <strong>{premio.ganador}</strong></>}
+              </li>
             ))}
           </ul>
         )}

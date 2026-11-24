@@ -14,11 +14,9 @@ export default function Inscripcion({ sesion }) {
   const { catalogo, error: errorCatalogo } = useCatalogoTorneos();
   const [equipos, setEquipos] = useState(null);
   const [errorEquipos, setErrorEquipos] = useState("");
-  const [equipoId, setEquipoId] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState("");
   const [confirmacion, setConfirmacion] = useState(null);
-  const [registrados, setRegistrados] = useState([]);
   const [ocupacion, setOcupacion] = useState({});
   const [verificacion, setVerificacion] = useState(null);
   const [reintento, setReintento] = useState(0);
@@ -29,7 +27,7 @@ export default function Inscripcion({ sesion }) {
   const individual = esTorneoIndividual(torneo);
   const elegibles = equipos?.filter((e) =>
     e.estado && e.capitanId === userId && e.juegoPrincipalId === torneo?.juegoId);
-  const equipo = elegibles?.find((e) => e.equipoId === Number(equipoId));
+  const equipo = elegibles?.find((e) => e.equipoId === Number(busqueda.get("equipo")));
   const participanteId = individual ? userId : equipo?.equipoId;
   const tipo = individual ? "INDIVIDUAL" : "EQUIPO";
   const clave = `${torneo?.id}/${tipo}/${participanteId}`;
@@ -56,10 +54,10 @@ export default function Inscripcion({ sesion }) {
       ? "El torneo no existe. Selecciona otro torneo."
       : "Selecciona un torneo.";
     if (!userId) return "Tu cuenta debe estar vinculada a un perfil.";
-    if (registrados.includes(clave)) return "Este participante ya está inscrito en el torneo.";
     const motivoCierre = motivoCierreInscripcion(torneo, ocupados);
     if (motivoCierre) return motivoCierre;
     if (individual) return "";
+    if (torneo.juegoActivo === false) return "El juego de este torneo está desactivado.";
     if (errorEquipos) return errorEquipos;
     if (!elegibles) return "Cargando tus equipos.";
     if (!elegibles.length) return "Necesitas capitanear un equipo activo del mismo juego.";
@@ -68,32 +66,58 @@ export default function Inscripcion({ sesion }) {
 
   const avisoSeleccion = bloqueoSeleccion();
   useEffect(() => {
-    if (avisoSeleccion) return;
+    if (!torneo || !participanteId) return;
     const control = new AbortController();
+    const { signal } = control;
     const parametros = individual ? { usuarioId: participanteId } : { equipoId: participanteId };
-    sancionesApi.verificar(parametros, token, control.signal)
-      .then((sancionado) => {
-        if (!control.signal.aborted) setVerificacion({ clave, token, sancionado });
+    const candidaturas = individual
+      ? inscripcionesApi.delJugador(participanteId, token, signal)
+      : inscripcionesApi.delEquipo(participanteId, token, signal);
+    Promise.all([
+      sancionesApi.verificar(parametros, token, signal),
+      candidaturas,
+      individual ? [] : equiposApi.integrantes(participanteId, signal),
+    ])
+      .then(([sancionado, inscripciones, miembros]) => {
+        if (signal.aborted) return;
+        const inscripcion = inscripciones.find((actual) => actual.torneoId === torneo.id);
+        setVerificacion({
+          clave, token, sancionado,
+          estadoInscripcion: inscripcion?.estado,
+          integrantes: new Set(miembros.map((miembro) => miembro.usuarioId)).size,
+        });
       })
       .catch(() => {
-        if (!control.signal.aborted) setVerificacion({ clave, token, error: true });
+        if (!signal.aborted) setVerificacion({ clave, token, error: true });
       });
     return () => control.abort();
-  }, [avisoSeleccion, clave, individual, participanteId, token, reintento]);
+  }, [torneo, clave, individual, participanteId, token, reintento]);
 
   const consulta = verificacion?.clave === clave && verificacion.token === token ? verificacion : null;
-  let avisoSancion = "";
-  if (!consulta) avisoSancion = "Comprobando sanciones…";
-  else if (consulta.error) avisoSancion = "No se pudo comprobar si hay sanciones. Reintenta la consulta.";
+  const estadoInscripcion = consulta?.estadoInscripcion;
+  const minIntegrantes = torneo?.jugadoresPorEquipo;
+  const faltantes = minIntegrantes - consulta?.integrantes;
+  const avisoInscrito = estadoInscripcion
+    ? `Este participante ya está inscrito en el torneo. Estado: ${estadoInscripcion.toLowerCase()}.`
+    : "";
+  let avisoVerificacion = "";
+  if (!consulta) avisoVerificacion = "Comprobando sanciones y requisitos…";
+  else if (consulta.error) avisoVerificacion = "No se pudieron comprobar los requisitos. Reintenta la consulta.";
   else if (consulta.sancionado) {
-    avisoSancion = individual
+    avisoVerificacion = individual
       ? "Tienes una sanción vigente y no puedes inscribirte."
       : "El equipo tiene una sanción vigente y no puede inscribirse.";
+  } else if (!individual && !Number.isInteger(minIntegrantes)) {
+    avisoVerificacion = "No se pudo comprobar el mínimo de integrantes de este juego.";
+  } else if (!individual && faltantes > 0) {
+    avisoVerificacion = faltantes === 1
+      ? "Al equipo le falta 1 integrante para inscribirse."
+      : `Al equipo le faltan ${faltantes} integrantes para inscribirse.`;
   }
 
   async function inscribir(evento) {
     evento.preventDefault();
-    if (enviando || bloqueoSeleccion() || avisoSancion) return;
+    if (enviando || avisoInscrito || bloqueoSeleccion() || avisoVerificacion) return;
     setEnviando(true);
     setError("");
     setConfirmacion(null);
@@ -104,7 +128,9 @@ export default function Inscripcion({ sesion }) {
         ...(individual ? { jugadorId: userId } : { equipoId: equipo.equipoId }),
       }, token);
 
-      setRegistrados((actuales) => [...actuales, clave]);
+      setVerificacion((actual) => actual?.clave === clave && actual.token === token
+        ? { ...actual, estadoInscripcion: registro.estado }
+        : actual);
       setConfirmacion({
         torneoId: torneo.id,
         torneo: torneo.nombre,
@@ -129,7 +155,7 @@ export default function Inscripcion({ sesion }) {
     setVerificacion(null);
   }
 
-  const aviso = avisoSeleccion || avisoSancion;
+  const aviso = avisoInscrito || avisoSeleccion || avisoVerificacion;
   return (
     <main className="contenedor pagina-detalle">
       <section className="titulo-pagina">
@@ -152,7 +178,6 @@ export default function Inscripcion({ sesion }) {
                 <select id="ins-torneo" className="form-select" value={torneo?.id ?? ""}
                   disabled={enviando} onChange={(e) => {
                     setBusqueda({ id: e.target.value });
-                    setEquipoId("");
                     cambiarSeleccion();
                   }}>
                   <option value="" disabled>Selecciona un torneo</option>
@@ -168,7 +193,9 @@ export default function Inscripcion({ sesion }) {
                   <select id="ins-participante" className="form-select" value={equipo?.equipoId ?? ""}
                     disabled={enviando || !elegibles?.length}
                     onChange={(e) => {
-                      setEquipoId(e.target.value);
+                      const seleccion = { id: String(torneo.id) };
+                      if (e.target.value) seleccion.equipo = e.target.value;
+                      setBusqueda(seleccion, { replace: true });
                       cambiarSeleccion();
                     }}>
                     <option value="">Selecciona un equipo</option>
@@ -186,7 +213,7 @@ export default function Inscripcion({ sesion }) {
                 }}>Reintentar consulta</button>
               )}
               {error && <p className="mensaje-error" role="alert">{error}</p>}
-              <button className="btn btn-primary boton boton-primario" disabled={enviando || Boolean(aviso)}>
+              <button type="submit" className="btn btn-primary boton boton-primario" disabled={enviando || Boolean(aviso)}>
                 {enviando ? "Registrando…" : "Confirmar inscripción"}
               </button>
             </form>
@@ -199,6 +226,8 @@ export default function Inscripcion({ sesion }) {
                 ["Modalidad", torneo.modalidad],
                 ["Estado", torneo.estado],
                 ["Cupos disponibles", disponibles],
+                ...(!individual && equipo && Number.isInteger(minIntegrantes) && Number.isInteger(consulta?.integrantes)
+                  ? [["Integrantes del equipo", `${consulta.integrantes} de ${minIntegrantes} requeridos`]] : []),
                 ["Cierre", formatearFecha(torneo.cierre)],
               ]} />
             </aside>

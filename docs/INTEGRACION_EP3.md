@@ -12,13 +12,13 @@ Acceso registra o autentica la cuenta. El frontend persiste el JWT en `localStor
 | Perfil competitivo | `GET /equipos/mis`, `GET /inscripciones/jugador/{id}`, `GET /inscripciones/equipo/{id}`, `GET /torneos`, `GET /rankings/torneo/{id}`, `GET /sanciones/usuario/{id}` |
 | Catálogo y detalle | `GET /torneos`, `GET /juegos`, lecturas por torneo en `/inscripciones`, `/partidas`, `/resultados` y `/rankings`, `GET /torneos/{id}/premios` |
 | Equipos | `GET /equipos/mis`, `POST /equipos`, `PUT /equipos/{id}`, listado, alta y baja de integrantes |
-| Inscripción | `GET /sanciones/verificar` con `usuarioId` o `equipoId`, `POST /inscripciones`, `GET /inscripciones/cupos/{id}` |
+| Inscripción | `GET /sanciones/verificar`, `GET /inscripciones/jugador/{id}` o `GET /inscripciones/equipo/{id}`, `GET /equipos/{id}/miembros`, `POST /inscripciones`, `GET /inscripciones/cupos/{id}` |
 | Administración | Gestión de `/juegos`, `/torneos`, `/torneos/{id}/estado` y `/torneos/{id}/premios` |
 | Organización | `PUT /inscripciones/{id}/estado`, cancelación de inscripciones, gestión de `/sanciones`, `/partidas`, y registro, edición, validación y anulación en `/resultados` |
 
-El catálogo y el detalle usan los cupos que devuelve el servidor. El formulario ofrece únicamente los equipos activos del mismo juego que capitanea la cuenta. La API actual también acepta solicitudes de otros integrantes del equipo. El detalle muestra marcadores validados y consulta las posiciones calculadas por el backend.
+El catálogo y el detalle usan los cupos que devuelve el servidor. El formulario ofrece únicamente los equipos activos del mismo juego que capitanea la cuenta. La API actual también acepta solicitudes de otros integrantes del equipo. El detalle muestra marcadores validados, las posiciones calculadas por el backend y el nombre del ganador asignado a cada premio. Si falla el ranking, el calendario y los participantes siguen disponibles cuando sus consultas se completan.
 
-El perfil suma las victorias y derrotas del jugador y de sus equipos actuales a partir de los rankings. Antes de habilitar el envío de una inscripción, el frontend consulta si el participante tiene una sanción vigente. El servicio de inscripciones vuelve a validar al recibir la solicitud.
+El perfil suma las victorias y derrotas del jugador y de sus equipos actuales a partir de los rankings. Antes de habilitar el envío, el formulario consulta las sanciones vigentes y las inscripciones previas. En torneos por equipos también compara los integrantes con el mínimo del juego. El formulario conserva la selección al recargar y recupera el estado de la inscripción desde el servidor. El servicio de inscripciones vuelve a validar al recibir la solicitud.
 
 ## Preparación de cuentas de prueba
 
@@ -29,7 +29,7 @@ En una base local vacía, crea el administrador inicial con `tools/crear-admin.p
 | Cuenta | Pasos | Resultado esperado |
 |---|---|---|
 | Visitante | Navega desde Inicio o Torneos a **Ver detalle**. Abre el enlace **Inscribirme** de un torneo abierto. | Detalle muestra el torneo seleccionado y Acceso solicita iniciar sesión. Tras entrar, la aplicación vuelve al formulario del mismo torneo. |
-| Jugador | Abre **Perfil**, recarga la página y verifica la sesión. En **Equipos**, crea un equipo y agrega integrantes. Inscribe al jugador en un torneo individual o a su equipo en uno por equipos. | Perfil muestra la cuenta y sus notificaciones. El creador figura como capitán y la inscripción comienza pendiente. El formulario consulta nuevamente los cupos. |
+| Jugador | Abre **Perfil**, recarga la página y verifica la sesión. En **Equipos**, crea un equipo y agrega integrantes. Inscribe al jugador en un torneo individual o a su equipo en uno por equipos. Recarga el formulario. | Perfil muestra la cuenta y sus notificaciones. El creador figura como capitán. El formulario indica si faltan integrantes, actualiza los cupos al inscribir y recupera el estado pendiente al recargar. |
 | Organizador | En **Organización**, confirma dos inscripciones. Cuando el torneo esté en curso, programa e inicia la partida, carga el marcador y valídalo. Finaliza la partida. Si hay un error, anula el resultado, corrígelo y vuelve a validarlo. | El detalle publica el marcador validado y lo retira al anularlo. La corrección queda pendiente hasta que se valida de nuevo y el ranking se recalcula. |
 | Administrador | Crea un juego y un torneo. Configura un premio, abre inscripciones y, cuando existan participantes confirmados, inicia el torneo. Finaliza cuando corresponda. | La modalidad queda fija al abrir las inscripciones. Al finalizar, el premio aparece en el detalle y los ganadores reciben una notificación en Perfil. |
 | Jugador | Abre directamente `/administracion.html` y `/organizacion.html`. Cierra sesión en otra pestaña. | Los paneles muestran acceso restringido. El cierre de sesión se refleja en ambas pestañas. |
@@ -37,7 +37,7 @@ En una base local vacía, crea el administrador inicial con `tools/crear-admin.p
 ## Verificación
 
 - **Compilación del frontend:** `npm run build` completado correctamente.
-- **Pruebas del frontend:** las 80 pruebas de Jasmine pasaron tanto en Edge como en jsdom. Las pruebas de pantalla simulan las respuestas HTTP y verifican los flujos por rol y los datos que el frontend envía a la API.
+- **Pruebas del frontend:** las 82 pruebas de Jasmine pasaron tanto en Edge como en jsdom. Las pruebas de pantalla simulan las respuestas HTTP y verifican los flujos por rol y los datos que el frontend envía a la API.
 - **Verificación de la API:** 13 comprobaciones pasaron con un entorno Docker y MySQL temporal. Se inscribieron dos equipos, se verificó el bloqueo de modalidad, se corrigió un resultado anulado y se comprobó el ranking, el premio y la notificación del ganador.
 - **Evidencia en navegador:** queda pendiente capturar el recorrido por rol para la entrega.
 

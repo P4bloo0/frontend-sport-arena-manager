@@ -63,7 +63,7 @@ describe("pantallas de la evaluación", () => {
   async function pulsar(selector) {
     await act(async () => contenedor.querySelector(selector).click());
   }
-  function simularApiDeDetalle() {
+  function simularApiDeDetalle({ rankingFalla = false } = {}) {
     return spyOn(globalThis, "fetch").and.callFake(async (url) => {
       const ruta = new URL(url).pathname;
       const id = Number(ruta.split("/").at(-1));
@@ -87,13 +87,17 @@ describe("pantallas de la evaluación", () => {
           estadoValidacion: r.validado ? "VALIDADO" : "PENDIENTE",
         }));
       } else if (ruta.includes("/rankings/")) {
+        if (rankingFalla) return { ok: false, status: 503, json: async () => ({}) };
         datos = id === 5 ? [{
           rankingId: 10, participanteId: 1, posicion: 1, victorias: 2,
           derrotas: 0, diferencia: 5, puntos: 6,
         }] : [];
       } else if (ruta.endsWith("/premios")) {
         const torneoId = Number(ruta.split("/").at(-2));
-        datos = db.premios.filter((p) => p.torneoId === torneoId);
+        datos = db.premios.filter((p) => p.torneoId === torneoId).map((premio) =>
+          torneoId === 5 && premio.posicion === 1
+            ? { ...premio, participanteId: 1, tipoParticipante: "EQUIPO" }
+            : premio);
       } else if (ruta.endsWith("/equipos")) {
         datos = db.equipos.map((e) => ({ equipoId: e.id, nombre: e.nombre }));
       } else if (ruta.endsWith("/usuarios/jugadores")) {
@@ -714,14 +718,26 @@ describe("pantallas de la evaluación", () => {
     spyOn(arenaService, "cargar").and.resolveTo(db);
     simularApiDeDetalle();
     await montar(<App />, "/detalle-torneo.html?id=5");
-    expect(contenedor.textContent).toContain("1.000 USD");
-    expect(contenedor.textContent).toContain("Los Salchipapas");
+    const primerPremio = contenedor.querySelector(".detalle-torneo section:last-of-type li");
+    expect(primerPremio.textContent).toContain("1.000 USD");
+    expect(primerPremio.textContent).toContain("Los Salchipapas");
     expect(contenedor.querySelector(".detalle-torneo .ficha-datos").textContent).toContain("2 /");
     expect(contenedor.querySelector(".detalle-torneo .tabla tbody").textContent).toContain("Confirmada");
     expect(contenedor.querySelector(".detalle-torneo section:nth-last-of-type(2) tbody").textContent).toContain("Los Salchipapas");
     await elegir("#selector-torneo", "2");
     expect(contenedor.textContent).toContain("Arena Táctica De Peru");
     expect(contenedor.textContent).not.toContain("1.000 USD");
+  });
+
+  it("mantiene participantes, calendario y premios visibles si falla el ranking", async () => {
+    spyOn(arenaService, "cargar").and.resolveTo(db);
+    simularApiDeDetalle({ rankingFalla: true });
+    await montar(<App />, "/detalle-torneo.html?id=5");
+
+    expect(contenedor.querySelector(".detalle-torneo .tabla tbody").textContent).toContain("Los Salchipapas");
+    expect(contenedor.querySelectorAll("#calendario-visible tbody tr").length).toBe(3);
+    expect(contenedor.textContent).toContain("No se pudo cargar la tabla de posiciones.");
+    expect(contenedor.querySelector(".detalle-torneo section:last-of-type li").textContent).toContain("1.000 USD");
   });
   it("filtra calendario y llave por ronda y reinicia al cambiar de torneo", async () => {
     spyOn(arenaService, "cargar").and.resolveTo(db);
@@ -775,7 +791,10 @@ describe("pantallas de la evaluación", () => {
       { ...abierto, id: 23, fechaCierre: "2000-01-01T12:00:00" },
       { ...abierto, id: 24, estado: "En curso" },
     ] });
-    spyOn(globalThis, "fetch").and.resolveTo({ ok: true, json: async () => ({ sancionado: false }) });
+    spyOn(globalThis, "fetch").and.callFake(async (url) => ({
+      ok: true,
+      json: async () => url.includes("/sanciones/verificar") ? { sancionado: false } : [],
+    }));
     await montar(<Inscripcion sesion={{ userId: 17, nickname: "jugador", token: "token" }} />, "/inscripcion.html");
 
     expect(Array.from(contenedor.querySelector("#ins-torneo").options, ({ value }) => value))
@@ -793,7 +812,7 @@ describe("pantallas de la evaluación", () => {
   });
 
   it("inscribe solo un equipo elegible y refresca los cupos", async () => {
-    const torneo = { ...db.torneos[1], juegoId: 9, cupoMaximo: 16, cupoActual: 2 };
+    const torneo = { ...db.torneos[1], juegoId: 9, jugadoresPorEquipo: 2, cupoMaximo: 16, cupoActual: 2 };
     const sesion = { token: "token", userId: 17, nickname: "Capitana", roles: ["JUGADOR"] };
     torneosApi.cargarCatalogo.and.resolveTo({ torneos: [torneo] });
     const fetchApi = spyOn(globalThis, "fetch").and.callFake(async (url, opciones) => {
@@ -806,6 +825,10 @@ describe("pantallas de la evaluación", () => {
       }
       if (ruta === "sanciones/verificar") return { ok: true, json: async () => ({ sancionado: false }) };
       if (ruta === `inscripciones/cupos/${torneo.id}`) return { ok: true, json: async () => 4 };
+      if (ruta === "inscripciones/equipo/31") return { ok: true, json: async () => [] };
+      if (ruta === "equipos/31/miembros") {
+        return { ok: true, json: async () => [{ usuarioId: 17 }, { usuarioId: 18 }] };
+      }
       const equipos = [
         { equipoId: 31, nombre: "Equipo elegible", juegoPrincipalId: 9, capitanId: 17, estado: true },
         { equipoId: 32, nombre: "Otro capitán", juegoPrincipalId: 9, capitanId: 19, estado: true },
@@ -829,11 +852,45 @@ describe("pantallas de la evaluación", () => {
       jasmine.objectContaining({ headers: jasmine.objectContaining({ Authorization: "Bearer token" }) }));
   });
 
+  it("recupera una inscripción guardada y muestra si otro equipo está incompleto", async () => {
+    const torneo = { ...db.torneos[1], juegoId: 9, jugadoresPorEquipo: 2, cupoMaximo: 16, cupoActual: 2 };
+    const sesion = { token: "token", userId: 17, nickname: "Capitana", roles: ["JUGADOR"] };
+    torneosApi.cargarCatalogo.and.resolveTo({ torneos: [torneo] });
+    const equipos = [
+      { equipoId: 31, nombre: "Equipo registrado", juegoPrincipalId: 9, capitanId: 17, estado: true },
+      { equipoId: 32, nombre: "Equipo incompleto", juegoPrincipalId: 9, capitanId: 17, estado: true },
+    ];
+    const respuestas = {
+      "equipos/mis": equipos,
+      "sanciones/verificar": { sancionado: false },
+      "inscripciones/equipo/31": [{ torneoId: torneo.id, estado: "CONFIRMADA" }],
+      "inscripciones/equipo/32": [],
+      "equipos/31/miembros": [{ usuarioId: 17 }, { usuarioId: 18 }],
+      "equipos/32/miembros": [{ usuarioId: 17 }, { usuarioId: 17 }],
+    };
+    spyOn(globalThis, "fetch").and.callFake(async (url) => {
+      const ruta = new URL(url).pathname.replace("/api/v1/", "");
+      return { ok: Object.hasOwn(respuestas, ruta), json: async () => respuestas[ruta] };
+    });
+
+    await montar(<Inscripcion sesion={sesion} />, `/inscripcion.html?id=${torneo.id}&equipo=31`);
+    expect(contenedor.querySelector("#ins-participante").value).toBe("31");
+    expect(contenedor.textContent).toContain("Estado: confirmada.");
+    expect(contenedor.querySelector('form button[type="submit"]').disabled).toBeTrue();
+    await elegir("#ins-participante", "32");
+    expect(contenedor.textContent).toContain("Al equipo le falta 1 integrante para inscribirse.");
+    expect(contenedor.querySelector("aside .ficha-datos").textContent).toContain("1 de 2 requeridos");
+    expect(contenedor.querySelector('form button[type="submit"]').disabled).toBeTrue();
+  });
+
   it("mantiene bloqueada la inscripción antes y después de detectar una sanción individual", async () => {
     const torneo = { ...db.torneos[2], estado: "Abierto", modalidad: "Individual", cupoActual: 0 };
     torneosApi.cargarCatalogo.and.resolveTo({ torneos: [torneo] });
     let responder;
-    const api = spyOn(globalThis, "fetch").and.callFake(() => new Promise((resolve) => { responder = resolve; }));
+    const api = spyOn(globalThis, "fetch").and.callFake(async (url) =>
+      url.includes("/sanciones/verificar")
+        ? new Promise((resolve) => { responder = resolve; })
+        : { ok: true, json: async () => [] });
 
     await montar(<Inscripcion sesion={{ userId: 17, nickname: "jugador", token: "token" }} />, `/inscripcion.html?id=${torneo.id}`);
     expect(contenedor.querySelector('form button:not([type="button"])').disabled).toBeTrue();
@@ -842,7 +899,7 @@ describe("pantallas de la evaluación", () => {
 
     expect(contenedor.textContent).toContain("Tienes una sanción vigente");
     expect(contenedor.querySelector('form button:not([type="button"])').disabled).toBeTrue();
-    expect(api).toHaveBeenCalledOnceWith(jasmine.stringMatching(/sanciones\/verificar\?usuarioId=17$/),
+    expect(api).toHaveBeenCalledWith(jasmine.stringMatching(/sanciones\/verificar\?usuarioId=17$/),
       jasmine.objectContaining({ method: "GET" }));
   });
 
@@ -862,6 +919,7 @@ describe("pantallas de la evaluación", () => {
         return { ok: true, json: async () => ({ estado: "PENDIENTE" }) };
       }
       if (ruta.endsWith("/sanciones/verificar")) return { ok: true, json: async () => ({ sancionado: false }) };
+      if (ruta.endsWith("/inscripciones/jugador/17")) return { ok: true, json: async () => [] };
       return { ok: ruta.includes("/cupos/"), json: async () => 1 };
     });
 
@@ -874,7 +932,8 @@ describe("pantallas de la evaluación", () => {
     await pulsar("form button");
     expect(contenedor.textContent).toContain("Inscripción registrada");
     expect(contenedor.textContent).toContain("solista");
-    expect(fetchApi.calls.count()).toBe(3);
+    expect(fetchApi).toHaveBeenCalledWith(jasmine.stringMatching(/inscripciones\/jugador\/17$/),
+      jasmine.objectContaining({ method: "GET" }));
   });
   it("crea un equipo usando la cuenta autenticada como capitán", async () => {
     const sesion = { token: "token", userId: 17, nickname: "Capitana", roles: ["JUGADOR"] };

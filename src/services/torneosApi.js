@@ -13,28 +13,38 @@ function etiqueta(valor) {
 }
 
 async function cargarDetalle(id, signal) {
-  const consultar = (ruta) => solicitar(ruta, { signal });
+  const errores = {};
+  const consultar = (ruta, seccion) => solicitar(ruta, { signal }).catch((error) => {
+    if (signal?.aborted) throw error;
+    if (seccion) errores[seccion] = true;
+    return [];
+  });
   const [inscripciones, partidas, resultados, ranking, premios] = await Promise.all([
-    consultar(`inscripciones/torneo/${id}`),
-    consultar(`partidas/torneo/${id}`),
-    consultar(`resultados/torneo/${id}`),
-    consultar(`rankings/torneo/${id}`),
-    consultar(`torneos/${id}/premios`),
+    consultar(`inscripciones/torneo/${id}`, "inscritos"),
+    consultar(`partidas/torneo/${id}`, "partidas"),
+    consultar(`resultados/torneo/${id}`, "resultados"),
+    consultar(`rankings/torneo/${id}`, "ranking"),
+    consultar(`torneos/${id}/premios`, "premios"),
   ]);
 
+  const hayEquipos = inscripciones.some((i) => i.equipoId != null)
+    || premios.some((premio) => premio.tipoParticipante === "EQUIPO");
+  const hayJugadores = inscripciones.some((i) => i.jugadorId != null)
+    || premios.some((premio) => premio.tipoParticipante === "INDIVIDUAL");
   const [equipos, jugadores] = await Promise.all([
-    inscripciones.some((i) => i.equipoId != null) ? consultar("equipos") : [],
-    inscripciones.some((i) => i.jugadorId != null) ? consultar("usuarios/jugadores") : [],
+    hayEquipos ? consultar("equipos") : [],
+    hayJugadores ? consultar("usuarios/jugadores") : [],
   ]);
   const nombresEquipos = new Map(equipos.map((e) => [e.equipoId, e.nombre]));
   const nombresJugadores = new Map(jugadores.map((j) => [j.usuarioId, j.nickname || j.nombre]));
+  const nombrePorTipo = (participanteId, esEquipo) => esEquipo
+    ? nombresEquipos.get(participanteId) ?? `Equipo #${participanteId}`
+    : nombresJugadores.get(participanteId) ?? `Jugador #${participanteId}`;
   const nombresParticipantes = new Map();
   const inscritos = inscripciones.map((i) => {
     const esEquipo = i.equipoId != null;
     const participanteId = i.equipoId ?? i.jugadorId;
-    const nombre = esEquipo
-      ? nombresEquipos.get(participanteId) ?? `Equipo #${participanteId}`
-      : nombresJugadores.get(participanteId) ?? `Jugador #${participanteId}`;
+    const nombre = nombrePorTipo(participanteId, esEquipo);
 
     // Partidas y ranking identifican al participante por ID sin indicar su tipo.
     const anterior = nombresParticipantes.get(participanteId);
@@ -46,8 +56,17 @@ async function cargarDetalle(id, signal) {
     ? "Participante por definir"
     : nombresParticipantes.get(id) ?? `Participante #${id}`;
 
+  function ganadorPremio({ participanteId, tipoParticipante }) {
+    if (participanteId == null) return null;
+    if (tipoParticipante === "EQUIPO" || tipoParticipante === "INDIVIDUAL") {
+      return nombrePorTipo(participanteId, tipoParticipante === "EQUIPO");
+    }
+    return nombreParticipante(participanteId);
+  }
+
   return {
     inscritos,
+    errores,
     partidas: partidas.map((p) => ({
       id: p.partidaId,
       ronda: p.ronda,
@@ -75,7 +94,7 @@ async function cargarDetalle(id, signal) {
       diferencia: r.diferencia,
       puntos: r.puntos,
     })),
-    premios,
+    premios: premios.map((premio) => ({ ...premio, ganador: ganadorPremio(premio) })),
   };
 }
 
@@ -87,7 +106,7 @@ export const torneosApi = {
       solicitar("juegos", { signal }),
     ]);
 
-    const nombres = new Map(juegos.map((juego) => [juego.juegoId, juego.nombre]));
+    const juegosPorId = new Map(juegos.map((juego) => [juego.juegoId, juego]));
 
     return {
       juegos: juegos
@@ -97,7 +116,9 @@ export const torneosApi = {
         id: torneo.torneoId,
         nombre: torneo.nombre,
         juegoId: torneo.juegoId,
-        juego: nombres.get(torneo.juegoId) ?? `Juego #${torneo.juegoId}`,
+        juego: juegosPorId.get(torneo.juegoId)?.nombre ?? `Juego #${torneo.juegoId}`,
+        jugadoresPorEquipo: juegosPorId.get(torneo.juegoId)?.jugadoresPorEquipo,
+        juegoActivo: juegosPorId.get(torneo.juegoId)?.estado,
         modalidad: torneo.modalidad,
         estado: estados[torneo.estado] ?? torneo.estado,
         fechaCierre: torneo.fechaCierreInscripcion,
