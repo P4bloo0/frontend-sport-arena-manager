@@ -220,7 +220,7 @@ describe("pantallas de la evaluación", () => {
       expect(contenedor.textContent).toContain(texto);
       expect(contenedor.querySelectorAll("main").length).toBe(1);
     });
-  it("carga el perfil y sus notificaciones con el JWT y los oculta al salir", async () => {
+  it("muestra datos competitivos y notificaciones reales del perfil", async () => {
     const datos = { exp: Math.floor(Date.now() / 1000) + 120, sub: "real",
       userId: 17, roles: ["JUGADOR"] };
     const jwt = `cabecera.${btoa(JSON.stringify(datos)).replace(/=+$/, "")}.firma`;
@@ -228,15 +228,29 @@ describe("pantallas de la evaluación", () => {
     getItem.withArgs("arena_sesion").and.returnValue(jwt);
     spyOn(arenaService, "cargar").and.rejectWith(new Error("demo no disponible"));
     const fetchPerfil = spyOn(globalThis, "fetch").and.callFake(async (url) => {
-      const contenido = url.endsWith("/notificaciones/me") ? [
-        { notificacionId: 1, mensaje: "Inscripción confirmada", fecha: "2026-11-20T12:00:00", estado: "ACTIVA" },
-        { notificacionId: 2, mensaje: "Ganaste un trofeo", fecha: "2026-11-22T12:00:00", estado: "ACTIVA" },
-        { notificacionId: 3, mensaje: "Aviso archivado", fecha: "2026-11-23T12:00:00", estado: "ARCHIVADA" },
-      ] : {
-        usuarioId: 17, nombre: "Cuenta real", email: "real@example.com",
-        nickname: "real", rol: "JUGADOR", estado: "ACTIVO",
+      const ruta = new URL(url).pathname.replace("/api/v1/", "");
+      const respuestas = {
+        "usuarios/me": { usuarioId: 17, nombre: "Cuenta real", email: "real@example.com",
+          nickname: "real", rol: "JUGADOR", estado: "ACTIVO" },
+        "notificaciones/me": [
+          { notificacionId: 1, mensaje: "Inscripción confirmada", fecha: "2026-11-20T12:00:00", estado: "ACTIVA" },
+          { notificacionId: 2, mensaje: "Ganaste un trofeo", fecha: "2026-11-22T12:00:00", estado: "ACTIVA" },
+          { notificacionId: 3, mensaje: "Aviso archivado", fecha: "2026-11-23T12:00:00", estado: "ARCHIVADA" },
+        ],
+        "equipos/mis": [{ equipoId: 31, nombre: "Equipo competitivo", capitanId: 17, estado: true }],
+        "inscripciones/jugador/17": [],
+        "inscripciones/equipo/31": [{ inscripcionId: 2, torneoId: 81, equipoId: 31,
+          estado: "CONFIRMADA", fechaInscripcion: "2026-11-23T12:00:00" }],
+        "torneos": [{ torneoId: 81, nombre: "Copa competitiva" }],
+        "rankings/torneo/81": [
+          { participanteId: 31, victorias: 2, derrotas: 1 },
+          { participanteId: 32, victorias: 9, derrotas: 4 },
+        ],
+        "sanciones/usuario/17": [{ sancionId: 1, motivo: "Sanción del torneo", estado: "ACTIVA",
+          fechaInicio: "2000-01-01T12:00:00", fechaFin: "2099-12-31T12:00:00" }],
       };
-      return { ok: true, json: async () => contenido };
+      if (!Object.hasOwn(respuestas, ruta)) throw new Error(`Petición inesperada: ${ruta}`);
+      return { ok: true, json: async () => respuestas[ruta] };
     });
 
     await montar(<App />, "/perfil.html");
@@ -247,8 +261,15 @@ describe("pantallas de la evaluación", () => {
     expect(contenedor.textContent).toContain("real@example.com");
     expect(fetchPerfil).toHaveBeenCalledWith(jasmine.stringMatching(/\/api\/v1\/notificaciones\/me$/),
       jasmine.objectContaining({ headers: jasmine.objectContaining({ Authorization: `Bearer ${jwt}` }) }));
-    expect([...contenedor.querySelectorAll(".list-group-item p")].map((aviso) => aviso.textContent))
+    expect([...contenedor.querySelectorAll('[aria-labelledby="perfil-notificaciones"] .list-group-item p')]
+      .map((aviso) => aviso.textContent))
       .toEqual(["Ganaste un trofeo", "Inscripción confirmada"]);
+    expect(contenedor.textContent).toContain("Equipo competitivo");
+    expect(contenedor.textContent).toContain("Copa competitiva");
+    expect(contenedor.querySelector('[aria-labelledby="perfil-historial"] .ficha-datos').textContent)
+      .toBe("Partidas ganadas2Partidas perdidas1Torneos jugados1");
+    expect(contenedor.querySelector('[aria-labelledby="perfil-sanciones"]').textContent)
+      .toContain("Sanción del torneoVigente");
 
     await act(async () => {
       getItem.withArgs("arena_sesion").and.returnValue(null);
@@ -754,7 +775,8 @@ describe("pantallas de la evaluación", () => {
       { ...abierto, id: 23, fechaCierre: "2000-01-01T12:00:00" },
       { ...abierto, id: 24, estado: "En curso" },
     ] });
-    await montar(<Inscripcion sesion={{ userId: 17, nickname: "jugador" }} />, "/inscripcion.html");
+    spyOn(globalThis, "fetch").and.resolveTo({ ok: true, json: async () => ({ sancionado: false }) });
+    await montar(<Inscripcion sesion={{ userId: 17, nickname: "jugador", token: "token" }} />, "/inscripcion.html");
 
     expect(Array.from(contenedor.querySelector("#ins-torneo").options, ({ value }) => value))
       .toEqual(["", "21"]);
@@ -782,6 +804,7 @@ describe("pantallas de la evaluación", () => {
         expect(JSON.parse(opciones.body)).toEqual({ torneoId: torneo.id, tipoParticipante: "EQUIPO", equipoId: 31 });
         return { ok: true, json: async () => ({ estado: "PENDIENTE" }) };
       }
+      if (ruta === "sanciones/verificar") return { ok: true, json: async () => ({ sancionado: false }) };
       if (ruta === `inscripciones/cupos/${torneo.id}`) return { ok: true, json: async () => 4 };
       const equipos = [
         { equipoId: 31, nombre: "Equipo elegible", juegoPrincipalId: 9, capitanId: 17, estado: true },
@@ -802,6 +825,25 @@ describe("pantallas de la evaluación", () => {
     expect(contenedor.querySelector("form button").disabled).toBeTrue();
     expect(fetchApi).toHaveBeenCalledWith(jasmine.stringMatching(/equipos\/mis$/),
       jasmine.objectContaining({ headers: jasmine.objectContaining({ Authorization: "Bearer token" }) }));
+    expect(fetchApi).toHaveBeenCalledWith(jasmine.stringMatching(/sanciones\/verificar\?equipoId=31$/),
+      jasmine.objectContaining({ headers: jasmine.objectContaining({ Authorization: "Bearer token" }) }));
+  });
+
+  it("mantiene bloqueada la inscripción antes y después de detectar una sanción individual", async () => {
+    const torneo = { ...db.torneos[2], estado: "Abierto", modalidad: "Individual", cupoActual: 0 };
+    torneosApi.cargarCatalogo.and.resolveTo({ torneos: [torneo] });
+    let responder;
+    const api = spyOn(globalThis, "fetch").and.callFake(() => new Promise((resolve) => { responder = resolve; }));
+
+    await montar(<Inscripcion sesion={{ userId: 17, nickname: "jugador", token: "token" }} />, `/inscripcion.html?id=${torneo.id}`);
+    expect(contenedor.querySelector('form button:not([type="button"])').disabled).toBeTrue();
+    expect(contenedor.textContent).toContain("Comprobando sanciones");
+    await act(async () => responder({ ok: true, json: async () => ({ sancionado: true }) }));
+
+    expect(contenedor.textContent).toContain("Tienes una sanción vigente");
+    expect(contenedor.querySelector('form button:not([type="button"])').disabled).toBeTrue();
+    expect(api).toHaveBeenCalledOnceWith(jasmine.stringMatching(/sanciones\/verificar\?usuarioId=17$/),
+      jasmine.objectContaining({ method: "GET" }));
   });
 
   it("regresa al torneo tras iniciar sesión y envía al jugador de la cuenta", async () => {
@@ -819,6 +861,7 @@ describe("pantallas de la evaluación", () => {
         });
         return { ok: true, json: async () => ({ estado: "PENDIENTE" }) };
       }
+      if (ruta.endsWith("/sanciones/verificar")) return { ok: true, json: async () => ({ sancionado: false }) };
       return { ok: ruta.includes("/cupos/"), json: async () => 1 };
     });
 
@@ -831,7 +874,7 @@ describe("pantallas de la evaluación", () => {
     await pulsar("form button");
     expect(contenedor.textContent).toContain("Inscripción registrada");
     expect(contenedor.textContent).toContain("solista");
-    expect(fetchApi.calls.count()).toBe(2);
+    expect(fetchApi.calls.count()).toBe(3);
   });
   it("crea un equipo usando la cuenta autenticada como capitán", async () => {
     const sesion = { token: "token", userId: 17, nickname: "Capitana", roles: ["JUGADOR"] };

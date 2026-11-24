@@ -32,10 +32,13 @@ export function inscripcionFueraDePlazo(torneo, fecha = hoy()) {
   return Boolean(torneo && fecha > torneo.cierre);
 }
 
+export function ahoraSantiago() {
+  return new Date().toLocaleString("sv-SE", { timeZone: "America/Santiago" }).replace(" ", "T");
+}
+
 export function motivoCierreInscripcion(torneo, ocupados = torneo.cupoActual) {
   if (torneo.estado !== "Abierto") return "El torneo no está abierto para inscripciones.";
-  const ahora = new Date().toLocaleString("sv-SE", { timeZone: "America/Santiago" }).replace(" ", "T");
-  if (torneo.fechaCierre && ahora > torneo.fechaCierre) return "El plazo de inscripción terminó.";
+  if (torneo.fechaCierre && ahoraSantiago() > torneo.fechaCierre) return "El plazo de inscripción terminó.";
   if (ocupados >= torneo.cupoMaximo) return "El torneo no tiene cupos disponibles.";
   return "";
 }

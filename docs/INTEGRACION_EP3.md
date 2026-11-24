@@ -9,13 +9,16 @@ Acceso registra o autentica la cuenta. El frontend persiste el JWT en `localStor
 | Flujo | Rutas a través del Gateway, bajo `/api/v1` |
 |---|---|
 | Sesión y perfil | `POST /auth/register`, `POST /auth/login`, `POST /auth/renovar`, `GET /usuarios/me`, `GET /notificaciones/me` |
+| Perfil competitivo | `GET /equipos/mis`, `GET /inscripciones/jugador/{id}`, `GET /inscripciones/equipo/{id}`, `GET /torneos`, `GET /rankings/torneo/{id}`, `GET /sanciones/usuario/{id}` |
 | Catálogo y detalle | `GET /torneos`, `GET /juegos`, lecturas por torneo en `/inscripciones`, `/partidas`, `/resultados` y `/rankings`, `GET /torneos/{id}/premios` |
 | Equipos | `GET /equipos/mis`, `POST /equipos`, `PUT /equipos/{id}`, listado, alta y baja de integrantes |
-| Inscripción | `POST /inscripciones`, `GET /inscripciones/cupos/{id}` |
+| Inscripción | `GET /sanciones/verificar` con `usuarioId` o `equipoId`, `POST /inscripciones`, `GET /inscripciones/cupos/{id}` |
 | Administración | Gestión de `/juegos`, `/torneos`, `/torneos/{id}/estado` y `/torneos/{id}/premios` |
 | Organización | `PUT /inscripciones/{id}/estado`, cancelación de inscripciones, gestión de `/sanciones`, `/partidas`, y registro, edición, validación y anulación en `/resultados` |
 
 El catálogo y el detalle usan los cupos que devuelve el servidor. El formulario ofrece únicamente los equipos activos del mismo juego que capitanea la cuenta. La API actual también acepta solicitudes de otros integrantes del equipo. El detalle muestra marcadores validados y consulta las posiciones calculadas por el backend.
+
+El perfil suma las victorias y derrotas del jugador y de sus equipos actuales a partir de los rankings. Antes de habilitar el envío de una inscripción, el frontend consulta si el participante tiene una sanción vigente. El servicio de inscripciones vuelve a validar al recibir la solicitud.
 
 ## Preparación de cuentas de prueba
 
@@ -34,7 +37,7 @@ En una base local vacía, crea el administrador inicial con `tools/crear-admin.p
 ## Verificación
 
 - **Compilación del frontend:** `npm run build` completado correctamente.
-- **Pruebas del frontend:** las 71 pruebas de Jasmine pasaron tanto en Edge como en jsdom. Las pruebas de pantalla simulan las respuestas HTTP y verifican los flujos por rol y los datos que el frontend envía a la API.
+- **Pruebas del frontend:** las 80 pruebas de Jasmine pasaron tanto en Edge como en jsdom. Las pruebas de pantalla simulan las respuestas HTTP y verifican los flujos por rol y los datos que el frontend envía a la API.
 - **Verificación de la API:** 13 comprobaciones pasaron con un entorno Docker y MySQL temporal. Se inscribieron dos equipos, se verificó el bloqueo de modalidad, se corrigió un resultado anulado y se comprobó el ranking, el premio y la notificación del ganador.
 - **Evidencia en navegador:** queda pendiente capturar el recorrido por rol para la entrega.
 

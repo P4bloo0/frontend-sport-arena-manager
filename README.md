@@ -29,7 +29,7 @@ El frontend usa el Gateway en `http://localhost:8080`. Para cambiarlo, copia `.e
 | Acceso | Funciones |
 |---|---|
 | Visitante | Inicio, catálogo, detalle de torneo, login y registro público. |
-| Jugador | Perfil, creación y gestión de sus equipos cuando es capitán e inscripción según modalidad. |
+| Jugador | Perfil con equipos, historial, resultados, sanciones y notificaciones. Creación y gestión de equipos cuando es capitán e inscripción con verificación previa de sanciones. |
 | Organizador | Panel Organización con inscripciones, sanciones, partidas y resultados. |
 | Administrador | Panel Administración con juegos, torneos y premios, además del panel Organización. |
 

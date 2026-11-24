@@ -6,6 +6,7 @@ import { Ficha } from "../components/Tablas.jsx";
 import { useCatalogoTorneos } from "../hooks/useCatalogoTorneos.js";
 import { equiposApi } from "../services/equiposApi.js";
 import { inscripcionesApi } from "../services/inscripcionesApi.js";
+import { sancionesApi } from "../services/sancionesApi.js";
 import { esTorneoIndividual, formatearFecha, motivoCierreInscripcion } from "../utils/logica.js";
 
 export default function Inscripcion({ sesion }) {
@@ -19,6 +20,8 @@ export default function Inscripcion({ sesion }) {
   const [confirmacion, setConfirmacion] = useState(null);
   const [registrados, setRegistrados] = useState([]);
   const [ocupacion, setOcupacion] = useState({});
+  const [verificacion, setVerificacion] = useState(null);
+  const [reintento, setReintento] = useState(0);
   const { token, userId, nickname } = sesion;
   const torneo = catalogo?.torneos.find((t) => t.id === Number(busqueda.get("id")));
   const opciones = catalogo?.torneos.filter((t) =>
@@ -48,7 +51,7 @@ export default function Inscripcion({ sesion }) {
     return () => control.abort();
   }, [token, torneo, individual]);
 
-  function bloqueo() {
+  function bloqueoSeleccion() {
     if (!torneo) return busqueda.has("id")
       ? "El torneo no existe. Selecciona otro torneo."
       : "Selecciona un torneo.";
@@ -63,9 +66,34 @@ export default function Inscripcion({ sesion }) {
     return equipo ? "" : "Selecciona el equipo que quieres inscribir.";
   }
 
+  const avisoSeleccion = bloqueoSeleccion();
+  useEffect(() => {
+    if (avisoSeleccion) return;
+    const control = new AbortController();
+    const parametros = individual ? { usuarioId: participanteId } : { equipoId: participanteId };
+    sancionesApi.verificar(parametros, token, control.signal)
+      .then((sancionado) => {
+        if (!control.signal.aborted) setVerificacion({ clave, token, sancionado });
+      })
+      .catch(() => {
+        if (!control.signal.aborted) setVerificacion({ clave, token, error: true });
+      });
+    return () => control.abort();
+  }, [avisoSeleccion, clave, individual, participanteId, token, reintento]);
+
+  const consulta = verificacion?.clave === clave && verificacion.token === token ? verificacion : null;
+  let avisoSancion = "";
+  if (!consulta) avisoSancion = "Comprobando sanciones…";
+  else if (consulta.error) avisoSancion = "No se pudo comprobar si hay sanciones. Reintenta la consulta.";
+  else if (consulta.sancionado) {
+    avisoSancion = individual
+      ? "Tienes una sanción vigente y no puedes inscribirte."
+      : "El equipo tiene una sanción vigente y no puede inscribirse.";
+  }
+
   async function inscribir(evento) {
     evento.preventDefault();
-    if (enviando || bloqueo()) return;
+    if (enviando || bloqueoSeleccion() || avisoSancion) return;
     setEnviando(true);
     setError("");
     setConfirmacion(null);
@@ -98,9 +126,10 @@ export default function Inscripcion({ sesion }) {
   function cambiarSeleccion() {
     setError("");
     setConfirmacion(null);
+    setVerificacion(null);
   }
 
-  const aviso = bloqueo();
+  const aviso = avisoSeleccion || avisoSancion;
   return (
     <main className="contenedor pagina-detalle">
       <section className="titulo-pagina">
@@ -150,6 +179,12 @@ export default function Inscripcion({ sesion }) {
                 </Campo>
               ))}
               {aviso && <p role="status">{aviso}</p>}
+              {!avisoSeleccion && consulta?.error && (
+                <button type="button" className="btn btn-outline-light" onClick={() => {
+                  setVerificacion(null);
+                  setReintento((actual) => actual + 1);
+                }}>Reintentar consulta</button>
+              )}
               {error && <p className="mensaje-error" role="alert">{error}</p>}
               <button className="btn btn-primary boton boton-primario" disabled={enviando || Boolean(aviso)}>
                 {enviando ? "Registrando…" : "Confirmar inscripción"}
