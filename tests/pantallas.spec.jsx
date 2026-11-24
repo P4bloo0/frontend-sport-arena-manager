@@ -297,7 +297,8 @@ describe("pantallas de la evaluación", () => {
         expect(headers.Authorization).toBe(`Bearer ${jwt}`);
       }
       let respuesta;
-      if (method === "GET" && ["juegos", "torneos", "torneos/81/premios/configuracion"].includes(ruta)) {
+      if (method === "GET" && ["juegos", "torneos", "torneos/81/premios/configuracion",
+        "equipos", "usuarios/jugadores", "sanciones"].includes(ruta)) {
         respuesta = [];
       } else if (method === "POST" && ruta === "juegos") {
         expect(JSON.parse(body).jugadoresPorEquipo).toBe(5);
@@ -326,10 +327,12 @@ describe("pantallas de la evaluación", () => {
 
     await montar(<App />, "/administracion.html");
     expect(contenedor.querySelector('nav a[href="/administracion.html"]')).not.toBeNull();
-    await escribir("#admin-nombre", "Valorant");
-    await escribir("#admin-genero", "FPS");
-    await escribir("#admin-modalidad", "5v5");
-    await escribir("#admin-jugadoresPorEquipo", "5");
+    expect(Array.from(contenedor.querySelector("#admin-juego-sugerido").options, ({ value }) => value))
+      .toEqual(["", "Valorant", "CS:GO", "Minecraft", "Rocket League", "League of Legends", "Brawl Stars", "Dota 2", "Fortnite"]);
+    await elegir("#admin-juego-sugerido", "Valorant");
+    expect(contenedor.querySelector("#admin-nombre").value).toBe("Valorant");
+    expect(contenedor.querySelector("#admin-genero").value).toBe("FPS");
+    expect(contenedor.querySelector("#admin-modalidad").value).toBe("5v5");
     await boton("Guardar juego");
     expect(contenedor.textContent).toContain("Juego guardado.");
 
@@ -354,6 +357,8 @@ describe("pantallas de la evaluación", () => {
     await escribir("#admin-descripcion", "Trofeo");
     await boton("Guardar premio");
     expect(contenedor.querySelector(".list-group").textContent).toContain("Trofeo");
+    await pulsar('a[href="/organizacion.html?seccion=sanciones"]');
+    expect(contenedor.textContent).toContain("Sanciones registradas");
   });
 
   it("bloquea el panel de Organización para un jugador", async () => {
@@ -884,10 +889,55 @@ describe("pantallas de la evaluación", () => {
     await montar(<App />, "/inventada");
     expect(contenedor.textContent).toContain("Página no encontrada");
   });
-  it("retira el selector y los botones de demostración", async () => {
+  it("muestra cuatro accesos rápidos y solicita la contraseña de la cuenta seleccionada", async () => {
+    const ingresar = spyOn(authApi, "ingresar");
     await montar(<App />);
     expect(contenedor.querySelector("#selector-perfil")).toBeNull();
     expect(contenedor.querySelector("footer button")).toBeNull();
+
+    await pulsar(".perfiles-predefinidos summary");
+    const perfiles = contenedor.querySelectorAll(".perfiles-predefinidos a");
+    expect(Array.from(perfiles, (perfil) => perfil.querySelector("strong").textContent))
+      .toEqual(["Admin", "Leo", "Camila", "Felipe"]);
+    await act(async () => perfiles[2].click());
+
+    expect(contenedor.querySelector("h1").textContent).toBe("Iniciar sesión");
+    expect(contenedor.querySelector("#acceso-nickname").value).toBe("camila");
+    expect(document.activeElement.id).toBe("acceso-password");
+    expect(ingresar).not.toHaveBeenCalled();
+  });
+
+  it("permite al administrador desactivar un equipo ajeno", async () => {
+    const datos = { exp: Math.floor(Date.now() / 1000) + 120, sub: "admin",
+      userId: 7, roles: ["ADMINISTRADOR"] };
+    const jwt = `cabecera.${btoa(JSON.stringify(datos)).replace(/=+$/, "")}.firma`;
+    localStorage.getItem.withArgs("arena_sesion").and.returnValue(jwt);
+    spyOn(window, "confirm").and.returnValue(true);
+    const equipo = { equipoId: 31, nombre: "Equipo de Felipe", juegoPrincipalId: 9, capitanId: 17, estado: true };
+    const fetchApi = spyOn(globalThis, "fetch").and.callFake(async (url, peticion) => {
+      const ruta = new URL(url).pathname.replace("/api/v1/", "");
+      const respuestas = {
+        equipos: [equipo],
+        juegos: [{ juegoId: 9, nombre: "Minecraft", estado: true }],
+        "usuarios/jugadores": [{ usuarioId: 17, nickname: "felipe" }],
+        "equipos/31/miembros": [{ usuarioId: 17, rolDentroEquipo: "CAPITAN" }],
+        "equipos/31": { ...equipo, estado: false },
+      };
+      const datosRespuesta = respuestas[ruta];
+      if (!datosRespuesta) throw new Error(`Petición inesperada: ${ruta}`);
+      return { ok: true, json: async () => datosRespuesta };
+    });
+
+    await montar(<App />, "/equipos.html");
+    expect(contenedor.textContent).toContain("Equipos registrados");
+    expect(contenedor.querySelector("#eq-crear-capitan").options[1].textContent).toBe("felipe");
+    await elegir("#eq-seleccion", "31");
+    await act(async () => [...contenedor.querySelectorAll("button")]
+      .find((boton) => boton.textContent === "Desactivar equipo").click());
+
+    expect(fetchApi).toHaveBeenCalledWith(jasmine.stringMatching(/\/api\/v1\/equipos\/31$/),
+      jasmine.objectContaining({ method: "DELETE", headers: jasmine.objectContaining({ Authorization: `Bearer ${jwt}` }) }));
+    expect(contenedor.textContent).toContain("Inactivo");
   });
   it("permite al capitán agregar y quitar integrantes y limita al resto a consultar", async () => {
     const equipo = { equipoId: 31, nombre: "Equipo real", juegoPrincipalId: 9, capitanId: 17, estado: true };

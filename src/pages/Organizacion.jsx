@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import Campo from "../components/Campo.jsx";
 import DosColumnas from "../components/DosColumnas.jsx";
 import { Estado } from "../components/TarjetaTorneo.jsx";
@@ -9,10 +10,15 @@ import { torneosApi } from "../services/torneosApi.js";
 
 import PartidasOrganizacion from "./PartidasOrganizacion.jsx";
 
-const secciones = ["Inscripciones", "Sanciones", "Partidas y resultados"];
+const secciones = [
+  ["inscripciones", "Inscripciones"],
+  ["sanciones", "Sanciones"],
+  ["partidas", "Partidas y resultados"],
+];
 
 export default function Organizacion({ token }) {
-  const [seccion, setSeccion] = useState("Inscripciones");
+  const [busqueda, setBusqueda] = useSearchParams();
+  const seccion = secciones.find(([id]) => id === busqueda.get("seccion"))?.[0] ?? "inscripciones";
   const [datos, setDatos] = useState(null);
   const [error, setError] = useState("");
   const op = useOperacion();
@@ -20,7 +26,7 @@ export default function Organizacion({ token }) {
   useEffect(() => {
     const control = new AbortController();
     const { signal } = control;
-    Promise.all([torneosApi.cargarCatalogo(signal), api.equipos(signal), equiposApi.jugadores(signal)])
+    Promise.all([torneosApi.cargarCatalogo(signal), equiposApi.listar(signal), equiposApi.jugadores(signal)])
       .then(([catalogo, equipos, jugadores]) => {
         if (!signal.aborted) setDatos({ torneos: catalogo.torneos, equipos, jugadores });
       })
@@ -38,22 +44,22 @@ export default function Organizacion({ token }) {
       {datos && (
         <>
           <div className="acciones-filtros mb-4" role="group" aria-label="Secciones de organización">
-            {secciones.map((nombre) => (
-              <button key={nombre} type="button" disabled={op.ocupado}
-                aria-pressed={seccion === nombre}
-                className={`btn ${seccion === nombre ? "btn-primary" : "btn-outline-light"}`}
+            {secciones.map(([id, nombre]) => (
+              <button key={id} type="button" disabled={op.ocupado}
+                aria-pressed={seccion === id}
+                className={`btn ${seccion === id ? "btn-primary" : "btn-outline-light"}`}
                 onClick={() => {
-                  if (nombre === seccion) return;
+                  if (id === seccion) return;
                   op.limpiar();
-                  setSeccion(nombre);
+                  setBusqueda({ seccion: id }, { replace: true });
                 }}>{nombre}</button>
             ))}
           </div>
           {op.error && <p className="mensaje-error" role="alert">{op.error}</p>}
           {op.mensaje && <p role="status">{op.mensaje}</p>}
-          {seccion === "Inscripciones" && <Inscripciones datos={datos} token={token} op={op} />}
-          {seccion === "Sanciones" && <Sanciones datos={datos} token={token} op={op} />}
-          {seccion === "Partidas y resultados" && (
+          {seccion === "inscripciones" && <Inscripciones datos={datos} token={token} op={op} />}
+          {seccion === "sanciones" && <Sanciones datos={datos} token={token} op={op} />}
+          {seccion === "partidas" && (
             <PartidasOrganizacion datos={datos} token={token} op={op} nombre={participante} />
           )}
         </>

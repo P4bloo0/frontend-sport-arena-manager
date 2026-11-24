@@ -1,12 +1,6 @@
 import { Link } from "react-router-dom";
+import { juegosPredeterminados } from "../data/catalogoJuegos.js";
 import { cuposDisponibles, formatearFecha } from "../utils/logica.js";
-
-const logosJuegos = {
-  "League of Legends": "/imagenes/juegos/lol.jpg",
-  Valorant: "/imagenes/juegos/valorant.jpg",
-  Minecraft: "/imagenes/juegos/Minecraft.jpg",
-  Fortnite: "/imagenes/juegos/fortnite.jpg",
-};
 
 export function Estado({ estado }) {
   return (
@@ -28,14 +22,13 @@ export default function TarjetaTorneo({
     (torneo.cupoMaximo - cuposDisponibles(torneo, inscripciones));
 
   const libres = Math.max(0, torneo.cupoMaximo - ocupados);
+  const portada = juegosPredeterminados.find(({ nombre }) => nombre === torneo.juego)?.portada;
 
   return (
     <article
       className="card tarjeta-torneo"
       style={{
-        "--logo-juego": logosJuegos[torneo.juego]
-          ? `url("${logosJuegos[torneo.juego]}")`
-          : "none",
+        "--logo-juego": portada ? `url("${portada}")` : "none",
       }}
     >
       <Estado estado={torneo.estado} />

@@ -1,7 +1,6 @@
 import { solicitar } from "./api.js";
 
 export const organizacionApi = {
-  equipos: (signal) => solicitar("equipos", { signal }),
   inscripciones: (id, token, signal) => solicitar(`inscripciones/torneo/${id}`, { token, signal }),
   actualizarInscripcion: (id, estado, token) => solicitar(
     `inscripciones/${id}/estado?nuevoEstado=${estado}`, { metodo: "PUT", token },

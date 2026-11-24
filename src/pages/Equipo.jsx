@@ -11,11 +11,12 @@ export default function Equipo({ sesion }) {
   const [equipoId, setEquipoId] = useState(null);
   const [error, setError] = useState("");
   const { token, userId, nickname } = sesion;
+  const esAdmin = sesion.roles.includes("ADMINISTRADOR");
 
   useEffect(() => {
     const control = new AbortController();
     Promise.all([
-      equiposApi.listarMios(token, control.signal),
+      esAdmin ? equiposApi.listar(control.signal) : equiposApi.listarMios(token, control.signal),
       equiposApi.juegos(control.signal),
       equiposApi.jugadores(control.signal),
     ]).then(([equipos, juegos, jugadores]) => {
@@ -27,7 +28,7 @@ export default function Equipo({ sesion }) {
     });
 
     return () => control.abort();
-  }, [token]);
+  }, [token, esAdmin]);
 
   function actualizarEquipo(equipo) {
     setDatos((actual) => {
@@ -41,6 +42,11 @@ export default function Equipo({ sesion }) {
     const jugador = datos.jugadores.find((j) => j.usuarioId === id);
     return jugador?.nickname || jugador?.nombre || (id === userId ? nickname : `Usuario #${id}`);
   };
+  const capitanes = esAdmin && datos
+    ? [{ id: userId, texto: nickname }, ...datos.jugadores
+        .filter((jugador) => jugador.usuarioId !== userId)
+        .map((jugador) => ({ id: jugador.usuarioId, texto: nombreJugador(jugador.usuarioId) }))]
+    : [];
 
   return (
     <main className="contenedor pagina-detalle">
@@ -49,14 +55,14 @@ export default function Equipo({ sesion }) {
         <p>Crea un equipo y administra su plantilla.</p>
       </section>
       {error && <p className="alert alert-warning" role="alert">{error}</p>}
-      {!datos && !error && <p role="status">Cargando tus equipos.</p>}
+      {!datos && !error && <p role="status">Cargando equipos.</p>}
       {datos && (
         <DosColumnas>
           <section className="panel-filtros">
             <h2>Crear equipo</h2>
-            <p>Capitán: <strong>{nickname}</strong></p>
+            {!esAdmin && <p>Capitán: <strong>{nickname}</strong></p>}
             {userId ? (
-              <FichaEquipo juegos={datos.juegos} capitanId={userId}
+              <FichaEquipo juegos={datos.juegos} capitanId={userId} capitanes={capitanes}
                 guardar={(campos) => equiposApi.crear(campos, token)}
                 alGuardar={(nuevo) => {
                   actualizarEquipo(nuevo);
@@ -67,9 +73,9 @@ export default function Equipo({ sesion }) {
             )}
           </section>
           <section className="panel-filtros">
-            <h2>Mis equipos</h2>
+            <h2>{esAdmin ? "Equipos registrados" : "Mis equipos"}</h2>
             {datos.equipos.length === 0 ? (
-              <p>Todavía no perteneces a un equipo.</p>
+              <p>{esAdmin ? "Todavía no hay equipos registrados." : "Todavía no perteneces a un equipo."}</p>
             ) : (
               <Campo id="eq-seleccion" etiqueta="Equipo">
                 <select className="form-select" id="eq-seleccion"
@@ -146,9 +152,9 @@ function FichaEquipo({ equipo, juegos, capitanId, capitanes = [], guardar, alGua
           ))}
         </select>
       </Campo>
-      {equipo && (
-        <Campo id="eq-editar-capitan" etiqueta="Capitán" error={error?.campos?.capitanId}>
-          <select className="form-select" id="eq-editar-capitan" value={capitanSeleccionado}
+      {capitanes.length > 0 && (
+        <Campo id={prefijo + "-capitan"} etiqueta="Capitán" error={error?.campos?.capitanId}>
+          <select className="form-select" id={prefijo + "-capitan"} value={capitanSeleccionado}
             onChange={(e) => setCapitan(e.target.value)}>
             {capitanes.map(({ id, texto }) => <option key={id} value={id}>{texto}</option>)}
           </select>
@@ -228,6 +234,11 @@ function Plantilla({ equipo, sesion, juegos, jugadores, nombreJugador, alGuardar
     });
   }
 
+  function desactivar() {
+    if (!window.confirm(`¿Desactivar ${equipo.nombre}?`)) return;
+    modificar(async () => alGuardar(await equiposApi.desactivar(equipoId, token)));
+  }
+
   const candidatos = jugadores.filter((j) =>
     j.usuarioId !== capitanId && !integrantes?.some((m) => m.usuarioId === j.usuarioId));
   const capitanes = [...new Set([capitanId, ...(integrantes ?? []).map((m) => m.usuarioId)])]
@@ -238,6 +249,11 @@ function Plantilla({ equipo, sesion, juegos, jugadores, nombreJugador, alGuardar
       <h3>{equipo.nombre}</h3>
       <p>{juegos.find((j) => j.juegoId === equipo.juegoPrincipalId)?.nombre ?? `Juego #${equipo.juegoPrincipalId}`}</p>
       <p>{equipo.estado ? "Activo" : "Inactivo"} · Capitán: {nombreJugador(capitanId)}</p>
+      {sesion.roles.includes("ADMINISTRADOR") && equipo.estado && (
+        <button className="btn btn-outline-light" type="button" disabled={ocupado} onClick={desactivar}>
+          Desactivar equipo
+        </button>
+      )}
       {error && <p className="mensaje-error" role="alert">{error}</p>}
       {!integrantes && !error && <p role="status">Cargando integrantes.</p>}
       {integrantes && (

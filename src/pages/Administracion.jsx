@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { useOperacion } from "../hooks/useOperacion.js";
 import Campo from "../components/Campo.jsx";
 import DosColumnas from "../components/DosColumnas.jsx";
 import { administracionApi as api } from "../services/administracionApi.js";
+import { juegosPredeterminados } from "../data/catalogoJuegos.js";
 
 const secciones = ["Juegos", "Torneos", "Premios"];
 const transiciones = {
@@ -51,6 +53,9 @@ export default function Administracion({ token }) {
                   setSeccion(nombre);
                 }}>{nombre}</button>
             ))}
+            <Link className="btn btn-outline-light" to="/organizacion.html?seccion=sanciones">
+              Gestionar sanciones
+            </Link>
           </div>
           {seccion === "Juegos" && <Juegos juegos={datos.juegos} cambiar={cambiar("juegos")} token={token} op={op} />}
           {seccion === "Torneos" && <Torneos torneos={datos.torneos} juegos={datos.juegos}
@@ -88,7 +93,10 @@ function actualizarPor(lista, campo, elemento) {
 
 function Juegos({ juegos, cambiar, token, op }) {
   const [seleccion, setSeleccion] = useState(null);
+  const [nombreSugerido, setNombreSugerido] = useState("");
   const juego = juegos.find((j) => j.juegoId === seleccion);
+  const sugerido = juegosPredeterminados.find((opcion) => opcion.nombre === nombreSugerido);
+  const valores = juego ?? sugerido;
 
   function guardar(evento) {
     evento.preventDefault();
@@ -121,15 +129,32 @@ function Juegos({ juegos, cambiar, token, op }) {
         </ul>
       </section>
       <section className="panel-filtros">
-        <h2>{juego ? "Editar juego" : "Crear juego"}</h2>
+        <h2>{juego ? "Editar juego" : "Agregar juego"}</h2>
         {juego && <button className="btn btn-outline-light mb-3" type="button" disabled={op.ocupado}
-          onClick={() => setSeleccion(null)}>Nuevo juego</button>}
-        <form key={juego?.juegoId ?? "nuevo"} className="formulario" onSubmit={guardar}>
-          <Entrada nombre="nombre" etiqueta="Nombre" valor={juego?.nombre} readOnly={Boolean(juego)} />
-          <Entrada nombre="genero" etiqueta="Género" valor={juego?.genero} />
-          <Entrada nombre="modalidad" etiqueta="Modalidad" valor={juego?.modalidad} />
+          onClick={() => {
+            setSeleccion(null);
+            setNombreSugerido("");
+          }}>Nuevo juego</button>}
+        {!juego && (
+          <Campo id="admin-juego-sugerido" etiqueta="Juego sugerido">
+            <select id="admin-juego-sugerido" className="form-select" disabled={op.ocupado}
+              value={nombreSugerido} onChange={(e) => setNombreSugerido(e.target.value)}>
+              <option value="">Juego personalizado</option>
+              {juegosPredeterminados.map(({ nombre }) => {
+                const registrado = juegos.some((actual) => actual.nombre.toLowerCase() === nombre.toLowerCase());
+                return <option key={nombre} value={nombre} disabled={registrado}>
+                  {nombre}{registrado ? " (ya agregado)" : ""}
+                </option>;
+              })}
+            </select>
+          </Campo>
+        )}
+        <form key={juego?.juegoId ?? nombreSugerido} className="formulario" onSubmit={guardar}>
+          <Entrada nombre="nombre" etiqueta="Nombre" valor={valores?.nombre} readOnly={Boolean(juego)} />
+          <Entrada nombre="genero" etiqueta="Género" valor={valores?.genero} />
+          <Entrada nombre="modalidad" etiqueta="Modalidad" valor={valores?.modalidad} />
           <Entrada nombre="jugadoresPorEquipo" etiqueta="Jugadores por equipo" tipo="number"
-            min={1} valor={juego?.jugadoresPorEquipo} />
+            min={1} valor={valores?.jugadoresPorEquipo} />
           <button className="btn btn-primary" disabled={op.ocupado}>Guardar juego</button>
         </form>
         {juego?.estado && (
