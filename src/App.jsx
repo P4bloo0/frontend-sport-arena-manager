@@ -14,6 +14,7 @@ import Organizacion from "./pages/Organizacion.jsx";
 import { rolesOrganizacion } from "./utils/roles.js";
 import Administracion from "./pages/Administracion.jsx";
 import { useSesion } from "./hooks/useSesion.js";
+import PerfilesPredefinidos from "./components/PerfilesPredefinidos.jsx";
 export default function App() {
   const { sesion, avisoSesion, iniciarSesion, cerrarSesion } = useSesion();
   const ubicacion = useLocation();
@@ -44,6 +45,7 @@ export default function App() {
           path="/acceso.html"
           element={
             <Acceso
+              key={ubicacion.key}
               sesion={sesion}
               avisoSesion={avisoSesion}
               iniciarSesion={iniciarSesion}
@@ -106,6 +108,7 @@ export default function App() {
         />
       </Routes>
       <PiePagina />
+      {!sesion && <PerfilesPredefinidos />}
     </>
   );
 }

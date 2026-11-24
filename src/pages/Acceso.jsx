@@ -32,6 +32,7 @@ export default function Acceso({ sesion, avisoSesion, iniciarSesion, cerrarSesio
   const [enviando, setEnviando] = useState(false);
   const [errores, setErrores] = useState({});
   const [mensaje, setMensaje] = useState("");
+  const apodoPredefinido = typeof state?.apodoPredefinido === "string" ? state.apodoPredefinido : undefined;
 
   async function enviar(e) {
     e.preventDefault();
@@ -94,6 +95,8 @@ export default function Acceso({ sesion, avisoSesion, iniciarSesion, cerrarSesio
       id,
       name: nombre,
       autoComplete: autocompletar,
+      defaultValue: !registro && nombre === "nickname" ? apodoPredefinido : undefined,
+      autoFocus: !registro && tipo === "password" && Boolean(apodoPredefinido),
       "aria-invalid": Boolean(errores[nombre]),
       "aria-describedby": `${id}-error`,
       onChange: () => {

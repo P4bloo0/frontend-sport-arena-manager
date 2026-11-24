@@ -35,6 +35,8 @@ El frontend usa el Gateway en `http://localhost:8080`. Para cambiarlo, copia `.e
 
 El registro público crea cuentas de jugador. Para preparar cuentas privilegiadas, consulta [la guía de integración](docs/INTEGRACION_EP3.md).
 
+**Accesos rápidos** en la esquina inferior derecha completa el apodo de Admin, Leo, Camila o Felipe. Ingresa la contraseña de la cuenta para iniciar sesión. El backend incluye el comando `node tools/preparar-perfiles-demo.mjs` para crear esas cuentas y guardar sus claves fuera del repositorio.
+
 ## Pruebas
 
 ```bash
